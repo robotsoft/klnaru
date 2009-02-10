@@ -511,6 +511,8 @@ public class ControlPanel extends JPanel implements ActionListener {
         iRobotBAM.Write(data);
 
         byte [] sensor =new byte[2];
+        sensor[0]=0;
+        sensor[1]=0;
         iRobotBAM.Read(sensor);
 		if(packetID==27){
 			//System.out.println(sensor[0]);		//High byte
