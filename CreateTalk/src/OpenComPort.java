@@ -26,7 +26,7 @@ public class OpenComPort {
 
 	/** The baud rate to use. */
 	public static final int BAUD = 57600;
-	String wantedPortName = "COM4";
+	String wantedPortName = "COM5";
 	
 	OpenComPort()
 	{

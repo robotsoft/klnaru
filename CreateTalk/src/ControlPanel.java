@@ -2,16 +2,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
+
 import java.awt.*;
 
 /**
  * @author Joseph
  * @date 10/23/2008
  */
-public class ControlPanel extends JPanel implements ActionListener {
+public class ControlPanel extends JPanel implements ActionListener,Runnable {
 
-	protected JButton Up,Down,Left,Right,Stop, Open,Mode,GoDistance,TurnAngle,MakeSquare,GoVelocity,ReadSensors;
-	protected JPanel p1,p2,p3,p4;
+	protected JButton Up,Down,Left,Right,Stop, Open,Mode,GoDistance,TurnAngle,MakeSquare,GoVelocity,ReadSensors, WallFollow;
+	protected JPanel p1,p2,p3,p4,p5;
 	protected JTextField WheelDropCaster, WheelDropRight, WheelDropLeft, BumpLeft, BumpRight, CliffLeft, CliffRight, CliffFrontLeft, CliffFrontRight, Wall;
 	protected final int Max2Bytes = 32768;	// 32767 = 0x8000
 	protected final int Min2Bytes = -32767;	// -32767 = 0xFFFF
@@ -20,6 +21,11 @@ public class ControlPanel extends JPanel implements ActionListener {
 	protected final int MaxVelocity = 500; // 500 mm/s
 	protected final int MinVelocity = -500; // -500 mm/s
 	protected final int DefaultVelocity = 200;
+	boolean Wallfollowstop = false;
+	protected final byte ON=(byte)1;
+	protected final byte OFF=(byte)0;
+	protected Point Create = new Point(0,0);
+	protected double CreateOrientation = 0;
 	
 	OpenComPort iRobotBAM = new OpenComPort();
 	
@@ -82,6 +88,9 @@ public class ControlPanel extends JPanel implements ActionListener {
     	CliffFrontRight =new JTextField(null,1);
     	Wall =new JTextField(null,4);
     	
+    	WallFollow = new JButton("Wall Follow");
+    	WallFollow.setActionCommand("Wall Follow");
+    	WallFollow.setEnabled(false);
     	
     	
         //Listen for actions on buttons 1 and 3.
@@ -97,12 +106,14 @@ public class ControlPanel extends JPanel implements ActionListener {
     	MakeSquare.addActionListener(this);
     	GoVelocity.addActionListener(this);
     	ReadSensors.addActionListener(this);
+    	WallFollow.addActionListener(this);
 
        	p1=new JPanel(new BorderLayout());
     	p2=new JPanel(new BorderLayout());
     	p3=new JPanel(new BorderLayout());
     	SpringLayout slayout=new SpringLayout();
     	p4=new JPanel(slayout);
+    	p5=new JPanel(new BorderLayout());
     	
     	//Add Components to this container, using the default FlowLayout.
         p1.add(Open,BorderLayout.WEST);
@@ -200,12 +211,15 @@ public class ControlPanel extends JPanel implements ActionListener {
         
         slayout.putConstraint(SpringLayout.SOUTH, p4, 5, SpringLayout.SOUTH, Wall);
         
+        p5.add(WallFollow);
         
-        setLayout(new BorderLayout());
-        add(p1,BorderLayout.NORTH);
-        add(p2,BorderLayout.WEST);
-        add(p3,BorderLayout.EAST);
-        add(p4,BorderLayout.SOUTH);
+        //setLayout(new BorderLayout());
+        setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+        add(p1);
+        add(p2);
+        add(p3);
+        add(p4);
+        add(p5);
     }
 
     /**
@@ -256,6 +270,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 		    MakeSquare.setEnabled(true);
 		    GoVelocity.setEnabled(true);
 		    ReadSensors.setEnabled(true);
+		    WallFollow.setEnabled(true);
 		}
 		
 		if ("Go".equals(e.getActionCommand())) {
@@ -316,6 +331,7 @@ public class ControlPanel extends JPanel implements ActionListener {
             data[4] = 0;  //[Left velocity low byte]
             
             iRobotBAM.Write(data);
+            Wallfollowstop = false; 
 		}
 		
 		//Additional functions by Soonhac Hong from Here
@@ -463,18 +479,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 				
 		//Read and Display the state of the wheel, bumper, and cliff sensors (binary) and read and display the value of the wall sensor (0-4095). 
 		if("Read Sensors".equals(e.getActionCommand())){
-			//byte[] data = new byte[2];
-			//data[0]= (byte)142;
-			//data[1]=(byte)11;		//Cliff Front Right
-			//iRobotBAM.Write(data);
-			
-			//byte [] sensor =new byte[1];
-			//iRobotBAM.Read(sensor);
-			//int x= sensor[0];
-			//Integer y= (Integer)x;
-			//System.out.println(sensor[0]);
-			//ReadSensor((byte)11);
-			
+						
 			WheelDropCaster.setText(String.valueOf(((ReadSensor((byte)7))>>4) & 0x0001));	//WheelDropCaster : BumpsandWheelDrops[4]
 			WheelDropLeft.setText(String.valueOf(((ReadSensor((byte)7))>>3) & 0x0001));	//WheelDropLeft: BumpsandWheelDrops[3]
 			WheelDropRight.setText(String.valueOf(((ReadSensor((byte)7))>>2) & 0x0001));	//WheelDropRight: BumpsandWheelDrops[2]
@@ -488,6 +493,118 @@ public class ControlPanel extends JPanel implements ActionListener {
 			//System.out.println(ReadSensor((byte)8));	//Wall state
 		}
 		
+		if("Wall Follow".equals(e.getActionCommand())){
+			System.out.println("Wall Follow starts !!!");
+			Thread itself = new Thread(this);
+		    itself.start();
+		}
+	}
+	
+	public void run(){
+		Wallfollowstop = true; 
+		wallFollowing();
+	}
+		   
+	private void wallFollowing()
+	{
+		byte drivingState=0;		//0 : STOP, 1 : Forwarding 
+		boolean isHitWall=false;
+		int NoWallCounter=0;
+		
+		CreatDirectDrive(200,200);//Go straight
+		while (Wallfollowstop){
+			//if wall is detected and bumper is pressed, turn left
+			if(isHitWall==false){
+				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
+					CreatDirectDrive(200,-200);	//turn left
+					WaitAngle(40);
+					CreatDirectDrive(0,0);
+					CreatDrive(200,-200);//Drive Curve
+					isHitWall=true;
+				}
+			}else{
+				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
+					Advnaced_LED(OFF);
+					CreatDirectDrive(200,-200);	//turn left
+					WaitAngle(20);
+					CreatDirectDrive(0,0);
+					CreatDrive(150,-600);//Drive Curve right
+					//isWall=false;
+					NoWallCounter=0;
+					
+				}else{
+					if(ReadSensor((byte)8)==0){		//No Wall
+						//if(isWall==true){
+							Advnaced_LED(OFF);
+							//CreatDirectDrive(-200,200);	//turn right
+							//WaitAngle(-10);
+							//CreatDirectDrive(0,0);
+							CreatDrive(150+NoWallCounter,-600); //Drive Curve right
+							//WaitEvent(9); //Wait Wall Event
+							//CreatDrive(200,200);//Drive Curve left
+							//isHitWall=false;
+							//isWall=false;
+							NoWallCounter+=25;
+							if(NoWallCounter>300)
+								NoWallCounter=300;
+							
+						//}
+					}else if((ReadSensor((byte)8)==1) || (ReadSensor((byte)27)>= 100)){		//Wall seen
+						//if(isWall==false){
+							Advnaced_LED(ON);
+							//CreatDirectDrive(-200,200);	//turn right
+							//WaitAngle(-10);
+							//CreatDirectDrive(0,0);
+							//CreatDrive(200,200);//Drive Curve
+							//isHitWall=false;
+							CreatDrive(150,600);//Drive Curve left
+							/*try {
+								Thread.sleep(500);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							CreatDrive(200,-800); //Drive Curve right*/
+							//System.out.println("Go stright");
+							NoWallCounter=0;
+						//	isWall=true;
+						//}
+					}
+				}
+			}
+		}
+	}
+	
+	private void UpdateCreatePosition(int vr, int vl){
+		Create.x=(int)((double)(vr+vl)*Math.cos(CreateOrientation)/2);
+		Create.y=(int)((double)(vr+vl)*Math.sin(CreateOrientation)/2);
+		CreateOrientation=(vr-vl)/diameter;
+		
+	}
+	
+	private void WaitAngle(int Angle)
+	{
+		byte[] data = new byte[3];
+		
+		data[0] = (byte)157;  //Wait Angle
+		data[1] = (byte)((Angle >> 8) & 0x00FF);  //[Angle high byte] 
+		data[2] = (byte)(Angle & 0x00FF);    //[Angle low byte]
+		iRobotBAM.Write(data);
+	}
+	
+	private void CreatDrive(int Velocity, int Radius)
+	{
+		byte[] data = new byte[5]; 
+		
+		data[0] = (byte)137;  //Direct Drive command
+		data[1] = (byte)((Velocity >> 8) & 0x00FF);  //[velocity high byte] 
+        data[2] = (byte)(Velocity & 0x00FF);    //[velocity low byte]
+        data[3] = (byte)((Radius >> 8) & 0x00FF); // [Radius high byte]
+        data[4] = (byte)(Radius & 0x00FF);    //[Radius low byte]
+        
+        iRobotBAM.Write(data);
+        
+        //UpdateCreatPosition();
 	}
 	
 	private void CreatDirectDrive(int rightVelocity, int leftVelocity)
@@ -501,6 +618,8 @@ public class ControlPanel extends JPanel implements ActionListener {
         data[4] = (byte)(leftVelocity & 0x00FF);    //[Left velocity low byte]
         
         iRobotBAM.Write(data);
+        
+        UpdateCreatePosition(rightVelocity,leftVelocity);
 	}
 	
 	public int ReadSensor(byte packetID)
@@ -551,6 +670,18 @@ public class ControlPanel extends JPanel implements ActionListener {
 
         data[0] = (byte)139;  //LED command
         data[1] = (byte)2;    //Select LED (Play : 8, power : 2) 
+        data[2] = (byte)255;    //Color 0 = green, 255 = red
+        data[3] = (byte)128;  //Intensity
+
+        iRobotBAM.Write(data);
+    }
+    
+    private void Advnaced_LED(byte onoff)
+    {
+        byte[] data = new byte[4];
+
+        data[0] = (byte)139;  //LED command
+        data[1] = (byte)(onoff<<3);    //Select LED (Advanced : 3, Play : 1) 
         data[2] = (byte)255;    //Color 0 = green, 255 = red
         data[3] = (byte)128;  //Intensity
 
