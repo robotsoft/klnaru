@@ -26,7 +26,9 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 	protected final byte OFF=(byte)0;
 	protected Point Create = new Point(0,0);
 	protected double CreateOrientation = 0;
-	
+	protected final int DIAMETER=28;
+	protected long startTime=0;
+	protected boolean isTimerStarted=false;
 	OpenComPort iRobotBAM = new OpenComPort();
 	
     public ControlPanel() {
@@ -274,7 +276,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		}
 		
 		if ("Go".equals(e.getActionCommand())) {
-			byte[] data = new byte[5];  
+			/*byte[] data = new byte[5];  
 
             data[0] = (byte)145;  //Direct Drive command
             data[1] = 0;    //[Right velocity high byte] 
@@ -282,7 +284,8 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
             data[3] = 0;    //[Left velocity high byte]
             data[4] = (byte)200;  //[Left velocity low byte]
             
-            iRobotBAM.Write(data);
+            iRobotBAM.Write(data);*/
+			CreatDirectDrive(200,200);
 		}
 		
 		if ("Back".equals(e.getActionCommand())) {
@@ -510,6 +513,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		byte drivingState=0;		//0 : STOP, 1 : Forwarding 
 		boolean isHitWall=false;
 		int NoWallCounter=0;
+		boolean isWall=false;
 		
 		CreatDirectDrive(200,200);//Go straight
 		while (Wallfollowstop){
@@ -526,8 +530,9 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
 					Advnaced_LED(OFF);
 					CreatDirectDrive(200,-200);	//turn left
-					WaitAngle(20);
+					WaitAngle(30);
 					CreatDirectDrive(0,0);
+					//CreatDirectDrive(200,200);
 					CreatDrive(150,-600);//Drive Curve right
 					//isWall=false;
 					NoWallCounter=0;
@@ -536,28 +541,28 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 					if(ReadSensor((byte)8)==0){		//No Wall
 						//if(isWall==true){
 							Advnaced_LED(OFF);
-							//CreatDirectDrive(-200,200);	//turn right
-							//WaitAngle(-10);
-							//CreatDirectDrive(0,0);
-							CreatDrive(150+NoWallCounter,-600); //Drive Curve right
+							CreatDirectDrive(-200,200);	//turn right
+							WaitAngle(-5);
+							CreatDirectDrive(200,200);
+							//CreatDrive(150+NoWallCounter,-600); //Drive Curve right
 							//WaitEvent(9); //Wait Wall Event
 							//CreatDrive(200,200);//Drive Curve left
 							//isHitWall=false;
-							//isWall=false;
-							NoWallCounter+=25;
-							if(NoWallCounter>300)
-								NoWallCounter=300;
+							isWall=false;
+							NoWallCounter+=2;
+							if(NoWallCounter>85)
+								NoWallCounter=85;
 							
 						//}
 					}else if((ReadSensor((byte)8)==1) || (ReadSensor((byte)27)>= 100)){		//Wall seen
-						//if(isWall==false){
+						if(isWall==false){
 							Advnaced_LED(ON);
-							//CreatDirectDrive(-200,200);	//turn right
-							//WaitAngle(-10);
-							//CreatDirectDrive(0,0);
+							CreatDirectDrive(200,-200);	//turn left
+							WaitAngle(5);
+							CreatDirectDrive(200,200);
 							//CreatDrive(200,200);//Drive Curve
 							//isHitWall=false;
-							CreatDrive(150,600);//Drive Curve left
+							//CreatDrive(150,600);//Drive Curve left
 							/*try {
 								Thread.sleep(500);
 							} catch (InterruptedException e) {
@@ -567,8 +572,8 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 							CreatDrive(200,-800); //Drive Curve right*/
 							//System.out.println("Go stright");
 							NoWallCounter=0;
-						//	isWall=true;
-						//}
+							isWall=true;
+						}
 					}
 				}
 			}
@@ -576,10 +581,15 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 	}
 	
 	private void UpdateCreatePosition(int vr, int vl){
-		Create.x=(int)((double)(vr+vl)*Math.cos(CreateOrientation)/2);
-		Create.y=(int)((double)(vr+vl)*Math.sin(CreateOrientation)/2);
-		CreateOrientation=(vr-vl)/diameter;
+		long elapsedTime=0;
+		if(isTimerStarted)
+			elapsedTime=System.currentTimeMillis()-startTime;
 		
+		CreateOrientation=((vr-vl)/DIAMETER)*elapsedTime;
+		Create.x=(int)((long)((double)(vr+vl)*Math.cos(CreateOrientation)/2)*elapsedTime);
+		Create.y=(int)((long)((double)(vr+vl)*Math.sin(CreateOrientation)/2)*elapsedTime);
+		
+		System.out.println("Robot = ("+Create.x+","+Create.y+","+CreateOrientation+")");
 	}
 	
 	private void WaitAngle(int Angle)
@@ -619,7 +629,11 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
         
         iRobotBAM.Write(data);
         
-        UpdateCreatePosition(rightVelocity,leftVelocity);
+        /*if(isTimerStarted){
+        	startTime=System.currentTimeMillis();
+        	isTimerStarted=true;
+        }
+        UpdateCreatePosition(rightVelocity,leftVelocity);*/
 	}
 	
 	public int ReadSensor(byte packetID)
