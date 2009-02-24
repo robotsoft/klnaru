@@ -514,6 +514,9 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		boolean isHitWall=false;
 		int NoWallCounter=0;
 		boolean isWall=false;
+		int[] wallValue=new int[10];
+		int wallFollowCounter=0;
+		int wallAdjacence=0;
 		
 		CreatDirectDrive(200,200);//Go straight
 		while (Wallfollowstop){
@@ -530,50 +533,63 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
 					Advnaced_LED(OFF);
 					CreatDirectDrive(200,-200);	//turn left
-					WaitAngle(30);
+					WaitAngle(10);
 					CreatDirectDrive(0,0);
-					//CreatDirectDrive(200,200);
-					CreatDrive(150,-600);//Drive Curve right
+					CreatDirectDrive(200,200);
+					//CreatDrive(150,-600);//Drive Curve right
 					//isWall=false;
 					NoWallCounter=0;
 					
 				}else{
 					if(ReadSensor((byte)8)==0){		//No Wall
-						//if(isWall==true){
-							Advnaced_LED(OFF);
-							CreatDirectDrive(-200,200);	//turn right
+						Advnaced_LED(OFF);
+						CreatDirectDrive(-200,200);	//turn right
+						if(NoWallCounter<10){
+							WaitAngle(-5);
+						}else{
+							WaitAngle(-30);
+							NoWallCounter=0;
+						}
+						CreatDirectDrive(200,200);
+						/*if(NoWallCounter>=5){	
+							CreatDirectDrive(0,200);	//turn right
 							WaitAngle(-5);
 							CreatDirectDrive(200,200);
-							//CreatDrive(150+NoWallCounter,-600); //Drive Curve right
-							//WaitEvent(9); //Wait Wall Event
-							//CreatDrive(200,200);//Drive Curve left
-							//isHitWall=false;
-							isWall=false;
-							NoWallCounter+=2;
-							if(NoWallCounter>85)
-								NoWallCounter=85;
-							
-						//}
+							NoWallCounter=0;
+						}*/
+						isWall=false;
+						NoWallCounter++;
 					}else if((ReadSensor((byte)8)==1) || (ReadSensor((byte)27)>= 100)){		//Wall seen
 						if(isWall==false){
 							Advnaced_LED(ON);
 							CreatDirectDrive(200,-200);	//turn left
 							WaitAngle(5);
 							CreatDirectDrive(200,200);
-							//CreatDrive(200,200);//Drive Curve
-							//isHitWall=false;
-							//CreatDrive(150,600);//Drive Curve left
-							/*try {
-								Thread.sleep(500);
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							CreatDrive(200,-800); //Drive Curve right*/
-							//System.out.println("Go stright");
 							NoWallCounter=0;
 							isWall=true;
-						}
+							wallFollowCounter=0;
+							wallAdjacence=0;
+						}else{
+							wallValue[wallFollowCounter]=ReadSensor((byte)27);
+							if(wallFollowCounter!=0){
+								if(wallValue[wallFollowCounter-1]<wallValue[wallFollowCounter])
+									wallAdjacence++;
+								else if(wallValue[wallFollowCounter-1]>wallValue[wallFollowCounter])
+									wallAdjacence--;
+							}
+							if(wallAdjacence>=4){
+								CreatDirectDrive(200,-200);	//turn left
+								WaitAngle(5);
+								CreatDirectDrive(200,200);
+								wallFollowCounter=0;
+								wallAdjacence=0;
+							}
+							if(wallFollowCounter<10)
+								wallFollowCounter++;
+							else
+								wallFollowCounter=0;
+							//System.out.println(wallFollowCounter+","+wallAdjacence);
+						}	
 					}
 				}
 			}
