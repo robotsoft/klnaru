@@ -38,6 +38,9 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 	float previousAngle=0;
 	final float PI=(float)3.14;
 	boolean isHitObject=false;
+	final double ANGLE_CAL_RATIO=0.95; 	// 95% of nominal angle
+	final int GOAL_DISTANCE=3000; //5000; 5M
+	Point createLocal =new Point(0,0);
 	
     public ControlPanel() {
     	Open = new JButton("Open");
@@ -541,11 +544,15 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 	
 	public void Bug2Algorithm(){
 		int goCounter=0;
+		int localDis=0;
+		
 		isTimerStarted=false;
 		CreateOrientation=0;
 		Create.x=0;
 		Create.y=0;
 		isHitObject=false;
+		previousAngle=0;
+		createLocal.x=createLocal.y=0;
 		
 		CreatDirectDrive(200,200);//Go straight
 		previousDrive=1;
@@ -553,8 +560,9 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		previousVl=200;
 		//startTime=System.currentTimeMillis();
 		while (Bug2stop){
-			if(Create.x>4900){		//Check out goal position.
+			if(Create.x>GOAL_DISTANCE){		//Check out goal position.
 				CreatDirectDrive(0,0);
+				Bug2stop=false;
 				break;
 			}
 			//if Object is detected and bumper is pressed, turn left
@@ -566,7 +574,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 					CreatDirectDrive(200,-200);	//turn left
 					previousDrive=2;
 					previousAngle=90*PI/180;
-					WaitAngle(83);		//0.69 radian
+					WaitAngle(85);		//0.69 radian
 					CreatDirectDrive(0,0);
 					UpdateCreatePosition();
 					
@@ -585,7 +593,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 					CreatDirectDrive(-200,200);	//turn right
 					previousDrive=2;
 					previousAngle=-90*PI/180;
-					WaitAngle(-83);		//0.69 radian
+					WaitAngle(-85);		//0.69 radian
 					CreatDirectDrive(0,0);
 					UpdateCreatePosition();
 					
@@ -596,59 +604,39 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 					//startTime=System.currentTimeMillis();
 	
 					isHitObject=true;
+				}else{
+					localDis=getDistance();
+					System.out.println("Distance="+localDis);
+					Create.x+=(int)((long)localDis*Math.cos(CreateOrientation));
+					Create.y+=(int)((long)localDis*Math.sin(CreateOrientation));
+					System.out.println("Robot local = ["+createLocal.x+","+createLocal.y+"]");
 				}
 			}else{	//Wall Following
 				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
-					//Advnaced_LED(OFF);
-					CreatDirectDrive(0,0);
-					UpdateCreatePosition();
-					
-					CreatDirectDrive(200,-200);	//turn left
-					WaitAngle(84);
-					previousDrive=2;
-					previousAngle=90*PI/180;
-					CreatDirectDrive(0,0);
-					UpdateCreatePosition();
-					
-					//CreatDrive(200,-100);//Drive Curve
-					//previousDrive=3;
-					//previousVr=200;
-					//startTime=System.currentTimeMillis();
-					CreatDirectDrive(200,200);//Go straight
-					previousDrive=4;
-					previousVr=100;
-					WaitDistance(100);		
-					CreatDirectDrive(0,0);
-					UpdateCreatePosition();
-					
-					CreatDirectDrive(-200,200);	//turn left
-					previousDrive=2;
-					previousAngle=-90*PI/180;
-					WaitAngle(-84);		//0.69 radian
-					CreatDirectDrive(0,0);
-					UpdateCreatePosition();
-					
-					CreatDirectDrive(200,200);//Go straight
-					previousDrive=1;
-					previousVr=200;
-					previousVl=200;
-					//startTime=System.currentTimeMillis();
-					goCounter=0;
-					
-					if(Create.y>(-90) && Create.y<90){
+					if(Create.y<-10){		//check intersection m-line
 						isHitObject=false;
 						CreatDirectDrive(0,0);
 						UpdateCreatePosition();
 						isHitObject=true;
 						
-						if(CreateOrientation>0){
-							CreatDirectDrive(-200,200);	//turn right
-						}else{
-							CreatDirectDrive(200,-200);	//turn left
-						}
-						WaitAngle((-1)*(int)(CreateOrientation*180/PI));
+						CreatDirectDrive(200,-200);	//turn left
+						WaitAngle((int)(((double)(-1)*(int)(CreateOrientation*180/PI)+90)*ANGLE_CAL_RATIO));
 						previousDrive=2;
-						previousAngle=(-1)*(float)CreateOrientation;
+						previousAngle=(-1)*(float)CreateOrientation+PI/2;
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(200,200);//Go back to the m-line
+						previousDrive=4;
+						previousVr=(-1)*Create.y;
+						WaitDistance((-1)*Create.y);		
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(-200,200);	//turn right
+						WaitAngle(-85);
+						previousDrive=2;
+						previousAngle=-90*PI/180;
 						CreatDirectDrive(0,0);
 						UpdateCreatePosition();
 						
@@ -657,24 +645,70 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 						previousVr=200;
 						previousVl=200;
 						isHitObject=false;	
+					}else{
+						//Advnaced_LED(OFF);
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(200,-200);	//turn left
+						WaitAngle(85);
+						previousDrive=2;
+						previousAngle=90*PI/180;
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						//CreatDrive(200,-100);//Drive Curve
+						//previousDrive=3;
+						//previousVr=200;
+						//startTime=System.currentTimeMillis();
+						CreatDirectDrive(200,200);//Go straight
+						previousDrive=4;
+						previousVr=100;
+						WaitDistance(100);		
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(-200,200);	//turn left
+						previousDrive=2;
+						previousAngle=-90*PI/180;
+						WaitAngle(-85);		//0.69 radian
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(200,200);//Go straight
+						previousDrive=1;
+						previousVr=200;
+						previousVl=200;
+						//startTime=System.currentTimeMillis();
+						goCounter=0;
 					}
 				}else{
-					//Calcuate the current position on the line.
+					//Calculate the current position on the line.
 					if(goCounter>1){
-						if(Create.y>(-20) && Create.y<20){
+						if(Create.y<-10){
 							isHitObject=false;
 							CreatDirectDrive(0,0);
 							UpdateCreatePosition();
 							isHitObject=true;
 							
-							if(CreateOrientation>0){
-								CreatDirectDrive(-200,200);	//turn right
-							}else{
-								CreatDirectDrive(200,-200);	//turn left
-							}
-							WaitAngle((-1)*(int)(CreateOrientation*180/PI));
+							CreatDirectDrive(200,-200);	//turn left
+							WaitAngle((int)(((double)(-1)*(int)(CreateOrientation*180/PI)+90)*ANGLE_CAL_RATIO));
 							previousDrive=2;
-							previousAngle=(-1)*(float)CreateOrientation;
+							previousAngle=(-1)*(float)CreateOrientation+PI/2;
+							CreatDirectDrive(0,0);
+							UpdateCreatePosition();
+							
+							CreatDirectDrive(200,200);//Go back to the m-line
+							previousDrive=4;
+							previousVr=(-1)*Create.y;
+							WaitDistance((-1)*Create.y);		
+							CreatDirectDrive(0,0);
+							UpdateCreatePosition();
+							
+							CreatDirectDrive(-200,200);	//turn right
+							WaitAngle(-85);
+							previousDrive=2;
+							previousAngle=-90*PI/180;
 							CreatDirectDrive(0,0);
 							UpdateCreatePosition();
 							
@@ -691,7 +725,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 							isHitObject=true;
 							
 							CreatDirectDrive(-200,200);	//turn right
-							WaitAngle(-84);
+							WaitAngle(-85);
 							previousDrive=2;
 							previousAngle=(-90)*PI/180;
 							CreatDirectDrive(0,0);
@@ -819,7 +853,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		if(previousDrive==1){  /* Direct Drive */
 			localDistance=getDistance();
 			if(isHitObject==true)
-				localDistance=localDistance-100;
+				localDistance=localDistance-185;
 			System.out.println("Distance="+localDistance);
 			//elapsedTime=(System.currentTimeMillis()-startTime);
 			//System.out.println(elapsedTime);
@@ -847,7 +881,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		
 		//Check intersect the m-line
 		//if(Create.y==0)
-		
+		System.out.println("Previoius Drive : " + previousDrive);
 		System.out.println("Robot= ("+Create.x+","+Create.y+","+(CreateOrientation*180/PI)+")");
 	}
 	
