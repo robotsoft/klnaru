@@ -38,8 +38,8 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 	float previousAngle=0;
 	final float PI=(float)3.14;
 	boolean isHitObject=false;
-	final double ANGLE_CAL_RATIO=0.95; 	// 95% of nominal angle
-	final int GOAL_DISTANCE=3000; //5000; 5M
+	final double ANGLE_CAL_RATIO=0.94; 	// 95% of nominal angle
+	final int GOAL_DISTANCE=5000; //5000; 5M
 	Point createLocal =new Point(0,0);
 	
     public ControlPanel() {
@@ -539,9 +539,109 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 			wallFollowing();
 		}else if(algorithmIndex==2){
 			Bug2Algorithm();
+			//Bug2AlgorithmCurve();
+		}
+	}
+	public void Bug2AlgorithmCurve(){
+		int localDis=0;
+		
+		isTimerStarted=false;
+		CreateOrientation=0;
+		Create.x=0;
+		Create.y=0;
+		isHitObject=false;
+		previousAngle=0;
+		createLocal.x=createLocal.y=0;
+		
+		CreatDirectDrive(200,200);//Go straight
+		previousDrive=1;
+		previousVr=200;
+		previousVl=200;
+		//startTime=System.currentTimeMillis();
+		while (Bug2stop){
+			if(Create.x>GOAL_DISTANCE){		//Check out goal position.
+				CreatDirectDrive(0,0);
+				Bug2stop=false;
+				break;
+			}
+			//if Object is detected and bumper is pressed, turn left
+			if(isHitObject==false){
+				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
+					CreatDirectDrive(0,0);
+					UpdateCreatePosition();
+					
+					CreatDirectDrive(200,-200);	//turn left
+					previousDrive=2;
+					previousAngle=30*PI/180;
+					WaitAngle((int)(30*ANGLE_CAL_RATIO));		//0.69 radian
+					CreatDirectDrive(0,0);
+					UpdateCreatePosition();
+					
+					CreatDrive(200,-200);//Drive Curve
+					previousDrive=3;
+	
+					isHitObject=true;
+				}else{
+					localDis=getDistance();
+					System.out.println("Distance="+localDis);
+					Create.x+=(int)((long)localDis*Math.cos(CreateOrientation));
+					Create.y+=(int)((long)localDis*Math.sin(CreateOrientation));
+					System.out.println("Robot local = ["+createLocal.x+","+createLocal.y+"]");
+				}
+			}else{	//Wall Following
+				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
+					if(Create.y<-10 && Create.x>0){		//check intersection m-line
+						isHitObject=false;
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						isHitObject=true;
+						
+						CreatDirectDrive(200,-200);	//turn left
+						WaitAngle((int)(((double)(-1)*(int)(CreateOrientation*180/PI)+90)*ANGLE_CAL_RATIO));
+						previousDrive=2;
+						previousAngle=(-1)*(float)CreateOrientation+PI/2;
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(200,200);//Go back to the m-line
+						previousDrive=4;
+						previousVr=(-1)*Create.y;
+						WaitDistance((-1)*Create.y);		
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(-200,200);	//turn right
+						WaitAngle(-85);
+						previousDrive=2;
+						previousAngle=-90*PI/180;
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(200,200);//Go straight
+						previousDrive=1;
+						previousVr=200;
+						previousVl=200;
+						isHitObject=false;	
+					}else{
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDirectDrive(200,-200);	//turn left
+						previousDrive=2;
+						previousAngle=30*PI/180;
+						WaitAngle((int)(30*ANGLE_CAL_RATIO));		//0.69 radian
+						CreatDirectDrive(0,0);
+						UpdateCreatePosition();
+						
+						CreatDrive(200,-200);//Drive Curve
+						previousDrive=3;
+					}
+				}
+			}
 		}
 	}
 	
+	//Bug2 Algorithm using Square pattern
 	public void Bug2Algorithm(){
 		int goCounter=0;
 		int localDis=0;
@@ -613,7 +713,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 				}
 			}else{	//Wall Following
 				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
-					if(Create.y<-10){		//check intersection m-line
+					if(Create.y<-10 && Create.x>0){		//check intersection m-line
 						isHitObject=false;
 						CreatDirectDrive(0,0);
 						UpdateCreatePosition();
@@ -685,7 +785,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 				}else{
 					//Calculate the current position on the line.
 					if(goCounter>1){
-						if(Create.y<-10){
+						if(Create.y<-10 && Create.x>0){
 							isHitObject=false;
 							CreatDirectDrive(0,0);
 							UpdateCreatePosition();
@@ -838,18 +938,15 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		return ReadSensor((byte)19);
 	}
 	
+	public int getAngle(){
+		return ReadSensor((byte)20);
+	}
+	
 	public void UpdateCreatePosition(){
 		long elapsedTime=0;
 		int localDistance=0;
-		/*if(isTimerStarted==false){
-        	startTime=System.currentTimeMillis();
-        	System.out.println(startTime);
-        	isTimerStarted=true;
-        	elapsedTime=0;
-        }else{*/
-			
-			//System.out.println("vr,vl = "+previousVr+","+previousVl);
-        /*}*/
+		int localAngle=0;
+		
 		if(previousDrive==1){  /* Direct Drive */
 			localDistance=getDistance();
 			if(isHitObject==true)
@@ -865,15 +962,17 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		}else if(previousDrive==2){	/* Curve Drive */
 			CreateOrientation=CreateOrientation+previousAngle;
 		}else if(previousDrive==3){/* Curve Drive */
-			int radius=100;
-			float theta=(long)((double)(previousVr)*elapsedTime/1000)/radius;
-			int xhat=(int)(radius*(1-Math.cos(theta)));
-			int yhat=(int)(radius*Math.sin(theta));
-			double orientationhat=Math.atan2(yhat,xhat);
-			CreateOrientation=CreateOrientation+orientationhat;
-			Create.x=Create.x+(int)(xhat*Math.cos(CreateOrientation))-Create.y*(int)(Math.sin(CreateOrientation));
-			Create.y=Create.x+(int)(xhat*Math.sin(CreateOrientation))+Create.y*(int)(Math.cos(CreateOrientation));
-			
+			localDistance=getDistance();
+			//if(isHitObject==true)
+			//	localDistance=localDistance-185;
+			System.out.println("Distance="+localDistance);
+			localAngle=getAngle();
+			System.out.println("Local Angle="+localAngle);
+			int radius=200;
+			int theta=localDistance/radius;
+			CreateOrientation=CreateOrientation+localAngle*PI/180;
+			Create.x=Create.x+(int)((double)(radius-(int)((long)radius*Math.cos(theta)))*Math.cos(CreateOrientation));
+			Create.y=Create.y+(int)(((double)((long)radius*Math.sin(theta)))*Math.sin(CreateOrientation));
 		}else if(previousDrive==4){
 			Create.x=Create.x+(int)((long)((double)(previousVr)*Math.cos(CreateOrientation)));
 			Create.y=Create.y+(int)((long)((double)(previousVr)*Math.sin(CreateOrientation)));
