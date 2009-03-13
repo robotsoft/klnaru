@@ -583,10 +583,10 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 					isHitObject=true;
 				}else{
 					localDis=getDistance();
-					System.out.println("Distance="+localDis);
+					//System.out.println("Distance="+localDis);
 					Create.x+=(int)((long)localDis*Math.cos(CreateOrientation));
 					Create.y+=(int)((long)localDis*Math.sin(CreateOrientation));
-					System.out.println("Robot local = ["+createLocal.x+","+createLocal.y+"]");
+					//System.out.println("Robot local = ["+createLocal.x+","+createLocal.y+"]");
 				}
 			}else{	//Wall Following
 				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
@@ -662,6 +662,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		while (Bug2stop){
 			if(Create.x>GOAL_DISTANCE){		//Check out goal position.
 				CreatDirectDrive(0,0);
+				System.out.println("Arrive goal position successfully !!");
 				Bug2stop=false;
 				break;
 			}
@@ -706,10 +707,10 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 					isHitObject=true;
 				}else{
 					localDis=getDistance();
-					System.out.println("Distance="+localDis);
+					//System.out.println("Distance="+localDis);
 					Create.x+=(int)((long)localDis*Math.cos(CreateOrientation));
 					Create.y+=(int)((long)localDis*Math.sin(CreateOrientation));
-					System.out.println("Robot local = ["+createLocal.x+","+createLocal.y+"]");
+					//System.out.println("Robot local = ["+createLocal.x+","+createLocal.y+"]");
 				}
 			}else{	//Wall Following
 				if(((ReadSensor((byte)7)) & 0x0001)==1 ||((ReadSensor((byte)7))>>1 & 0x0001)==1 ){
@@ -951,7 +952,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 			localDistance=getDistance();
 			if(isHitObject==true)
 				localDistance=localDistance-185;
-			System.out.println("Distance="+localDistance);
+			//System.out.println("Distance="+localDistance);
 			//elapsedTime=(System.currentTimeMillis()-startTime);
 			//System.out.println(elapsedTime);
 			//CreateOrientation=CreateOrientation+((previousVr-previousVl)/DIAMETER)*elapsedTime/1000;
@@ -965,9 +966,9 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 			localDistance=getDistance();
 			//if(isHitObject==true)
 			//	localDistance=localDistance-185;
-			System.out.println("Distance="+localDistance);
+			//System.out.println("Distance="+localDistance);
 			localAngle=getAngle();
-			System.out.println("Local Angle="+localAngle);
+			//System.out.println("Local Angle="+localAngle);
 			int radius=200;
 			int theta=localDistance/radius;
 			CreateOrientation=CreateOrientation+localAngle*PI/180;
@@ -980,8 +981,8 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 		
 		//Check intersect the m-line
 		//if(Create.y==0)
-		System.out.println("Previoius Drive : " + previousDrive);
-		System.out.println("Robot= ("+Create.x+","+Create.y+","+(CreateOrientation*180/PI)+")");
+		//System.out.println("Previoius Drive : " + previousDrive);
+		//System.out.println("Robot= ("+Create.x+","+Create.y+","+(CreateOrientation*180/PI)+")");
 	}
 	
 	private void WaitDistance(int d){
