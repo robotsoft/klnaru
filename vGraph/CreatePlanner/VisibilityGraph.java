@@ -656,7 +656,7 @@ public class VisibilityGraph {
 		}
 		
 		float minX,minY,maxX,maxY,centerX,centerY;
-		float radius=(float) 0.17;	//Creat Diameter : 0.33 [m]
+		float radius=(float) 0.18;	//Creat Diameter : 0.33 [m]
 		for(int i = 1; i < gObstacles.size(); i++){
 			//Find max and min of vertex
 			minX=((Obstacle)gObstacles.get(i)).getMinX();

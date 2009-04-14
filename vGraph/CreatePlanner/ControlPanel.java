@@ -566,8 +566,8 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 			Bug2Algorithm();
 			//Bug2AlgorithmCurve();
 		}else if(algorithmIndex==3){
-			//followPath2();
-			followPath();
+			followPath2();
+			//followPath();
 		}
 	}
 	
@@ -639,7 +639,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 			CreatDirectDrive(400,400);
 			WaitDistance(localTargetDistance-100);
 			CreatDirectDrive(0,0);
-			CreatDirectDrive(300,300);
+			CreatDirectDrive(200,200);
 			WaitDistance(100);
 			CreatDirectDrive(0,0);
 			Create.x=localtarget.get(i).x;
