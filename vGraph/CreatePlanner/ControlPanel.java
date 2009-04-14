@@ -566,15 +566,12 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 			Bug2Algorithm();
 			//Bug2AlgorithmCurve();
 		}else if(algorithmIndex==3){
+			//followPath2();
 			followPath();
-			//Bug2AlgorithmCurve();
 		}
 	}
 	
 	public void followPath()  { 
-		/*****************
-		 * Insert your code here to have the PER follow the provided waypoints
-		 ***************/
 		int localTargetDistance=0;
 		int localTargetAngle=0;
 		
@@ -599,7 +596,7 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 			CreateOrientation=CreateOrientation+localTargetAngle;
 			
 			//Go to the local Target position
-			CreatDirectDrive(200,200);
+			CreatDirectDrive(300,300);
 			WaitDistance(localTargetDistance);
 			CreatDirectDrive(0,0);
 			Create.x=localtarget.get(i).x;
@@ -609,6 +606,50 @@ public class ControlPanel extends JPanel implements ActionListener,Runnable {
 			}
 		}
 	}
+	
+	public void followPath2()  { 
+		int localTargetDistance=0;
+		int localTargetAngle=0;
+		
+		Create.x=0;
+		Create.y=0;
+		for(int i=0;i<localtarget.size();i++){
+			localTargetDistance=(int)Math.sqrt((Create.x-localtarget.get(i).x)*(Create.x-localtarget.get(i).x)+(Create.y-localtarget.get(i).y)*(Create.y-localtarget.get(i).y));
+			localTargetAngle=(int)(Math.atan2(Create.y-localtarget.get(i).y,localtarget.get(i).x-Create.x)*180/PI)+(int)CreateOrientation*(-1);
+			System.out.println("Robot Position = ["+Create.x+","+Create.y+"]");
+			System.out.println("Local Target Position = ["+localtarget.get(i).x+","+localtarget.get(i).y+"]");
+			System.out.println("Local Target Distacne : "+localTargetDistance);
+			System.out.println("Local Target Orientation : "+localTargetAngle);
+			
+			//Turn to the local Target position
+			if(localTargetAngle<0){
+				CreatDirectDrive(-200,200);	//turn right
+			}else if(localTargetAngle>0){
+				CreatDirectDrive(200,-200);	//turn left
+			}
+			WaitAngle((int)(localTargetAngle*ANGLE_CAL_RATIO));		//0.69 radian
+			CreatDirectDrive(0,0);
+			CreateOrientation=CreateOrientation+localTargetAngle;
+			
+			//Go to the local Target position
+			//Acceleration
+//			CreatDirectDrive(300,300);
+//			WaitDistance(100);
+//			CreatDirectDrive(0,0);
+			CreatDirectDrive(400,400);
+			WaitDistance(localTargetDistance-100);
+			CreatDirectDrive(0,0);
+			CreatDirectDrive(300,300);
+			WaitDistance(100);
+			CreatDirectDrive(0,0);
+			Create.x=localtarget.get(i).x;
+			Create.y=localtarget.get(i).y;
+			if(!vGraphstop){
+				break;
+			}
+		}
+	}
+	
 	public void Bug2AlgorithmCurve(){
 		int localDis=0;
 		
