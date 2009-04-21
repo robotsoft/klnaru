@@ -445,10 +445,9 @@ public class PathPlannerMainUI extends JFrame implements MouseListener, MouseMot
 //	        controller.followPath(vg.waypoints);
 			cp.createAndShowGUI(vg.waypoints);
 		}else if (event==this.MENUITEM_RRT_LOAD){
-			System.out.println("Load Obstacles and Start/Goal");
+			//System.out.println("Load Obstacles and Start/Goal");
 			openObstaclesStartGoal();
 		}else if (event==this.MENUITEM_RRT_RUN){
-			System.out.println("Run RRT");
 			runRRT();
 		}
 		this.repaint();

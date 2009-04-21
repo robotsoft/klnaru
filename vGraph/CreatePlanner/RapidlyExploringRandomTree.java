@@ -159,8 +159,40 @@ public class RapidlyExploringRandomTree {
 	 * @param startGoalFile
 	 */
 	public void computeRRT(){
+		System.out.println("Run RRT");
+		boolean isNotTreeMerged=true;
+		ArrayList<Vertex> startVertices=new ArrayList();
+		ArrayList<Vertex> goalVertices=new ArrayList();
+		ArrayList<Edge> startEdges=new ArrayList();
+		ArrayList<Edge> goalEdges=new ArrayList();
+		//ArrayList startTree =new ArrayList();
+		//ArrayList goalTree =new ArrayList();
 		
+		startVertices.add(start);
+		goalVertices.add(goal);
 		
+		while(isNotTreeMerged){
+			extendRRT(startVertices,vRandom(startVertices));
+		}
+	}
+	
+	public Vertex vRandom(ArrayList vertices){
+		Vertex rVertex=new Vertex(0,0);
+		int maxradious=5;
+		int minradious=1;
 		
+		rVertex.x=(float)(minradious+(maxradious-minradious)*Math.random())+((Vertex)vertices.get(vertices.size())).x;
+		rVertex.y=(float)(minradious+(maxradious-minradious)*Math.random())+((Vertex)vertices.get(vertices.size())).y;
+		return rVertex;
+	}
+	public void extendRRT(ArrayList vertices, Vertex v){
+		
+		//Find closest neighbor of v in T
+		int localdistance=Integer.MAX_VALUE;
+		for(int i=0;i<vertices.size();i++){
+			if(((Vertex)vertices.get(i)).distanceToVertex(v)<localdistance){
+				localdistance=(int)((Vertex)vertices.get(i)).distanceToVertex(v);
+			}
+		}
 	}
 }
