@@ -15,6 +15,7 @@ import java.util.StringTokenizer;
  */
 public class RapidlyExploringRandomTree {
 
+	final int step_size=10;
 	/**
 	 * Original obstacles specified in the source file
 	 */
@@ -23,7 +24,12 @@ public class RapidlyExploringRandomTree {
 	/**
 	 * Tree
 	 */
-	public ArrayList<Edge> rrtEdge;
+	ArrayList<Vertex> startVertices;
+	ArrayList<Vertex> goalVertices;
+	ArrayList<Vertex> mergedVertices;
+	ArrayList<Edge> startEdges;
+	ArrayList<Edge> goalEdges;
+	ArrayList<Edge> mergedEdges;
 
 	/**
 	 * Shortest path computed from Visibility graph
@@ -159,40 +165,147 @@ public class RapidlyExploringRandomTree {
 	 * @param startGoalFile
 	 */
 	public void computeRRT(){
-		System.out.println("Run RRT");
+		System.out.println("Run RRT.....Wait for a while!!!....");
 		boolean isNotTreeMerged=true;
-		ArrayList<Vertex> startVertices=new ArrayList();
-		ArrayList<Vertex> goalVertices=new ArrayList();
-		ArrayList<Edge> startEdges=new ArrayList();
-		ArrayList<Edge> goalEdges=new ArrayList();
+		startVertices=new ArrayList();
+		goalVertices=new ArrayList();
+		startEdges=new ArrayList();
+		goalEdges=new ArrayList();
 		//ArrayList startTree =new ArrayList();
 		//ArrayList goalTree =new ArrayList();
 		
 		startVertices.add(start);
 		goalVertices.add(goal);
 		
+//		startEdges.add(new Edge(start,new Vertex(100,100)));
+//		startEdges.add(new Edge(start,new Vertex(50,50)));
+//		startEdges.add(new Edge(new Vertex(50,50),new Vertex(200,200)));
+//		
+//		goalEdges.add(new Edge(goal,new Vertex(400,500)));
+//		goalEdges.add(new Edge(goal,new Vertex(380,380)));
+//		goalEdges.add(new Edge(new Vertex(380,380),new Vertex(250,200)));
+		int startMergedVertex=0;
+		int goalMergedVertex=0;
 		while(isNotTreeMerged){
-			extendRRT(startVertices,vRandom(startVertices));
+			extendRRT(startVertices,startEdges,vRandom());
+			extendRRT(goalVertices,goalEdges,vRandom());
+			
+			for(int i=0;i<startVertices.size();i++){
+				for(int j=0;j<goalVertices.size();j++){
+					if(((Vertex)startVertices.get(i)).distanceToVertex(((Vertex)goalVertices.get(j)))<=step_size){
+						isNotTreeMerged=false;
+						startMergedVertex=i;
+						goalMergedVertex=j;
+					}
+				}
+			}
+			
+//			if(startVertices.get(startVertices.size()-1).distanceToVertex(goal)<=step_size){
+//			//if(goalVertices.get(goalVertices.size()-1).distanceToVertex(start)<=step_size){
+//			//if(startVertices.size()>=19){
+//					isNotTreeMerged=false;
+//			}
+			//System.out.println(startVertices.size());
 		}
+		
+		//Merge Tree : TODO : Debug Here !!!!
+//		for(int i=0;i<startVertices.size();i++){
+//			mergedVertices.add(new Vertex(((Vertex)startVertices.get(i)).x,((Vertex)startVertices.get(i)).y));
+//		}
+//		for(int i=0;i<startEdges.size();i++){
+//			mergedEdges.add(new Edge(((Edge)startEdges.get(i)).v1,((Edge)startEdges.get(i)).v2));
+//		}
+//		for(int i=0;i<goalVertices.size();i++){
+//			mergedVertices.add(new Vertex(((Vertex)goalVertices.get(i)).x,((Vertex)goalVertices.get(i)).y));
+//		}
+//		mergedEdges.add(new Edge((Vertex)startVertices.get(startMergedVertex),(Vertex)goalVertices.get(goalMergedVertex)));
+//		for(int i=0;i<goalEdges.size();i++){
+//			mergedEdges.add(new Edge(((Edge)goalEdges.get(i)).v1,((Edge)goalEdges.get(i)).v2));
+//		}
 	}
 	
-	public Vertex vRandom(ArrayList vertices){
+	public Vertex vRandom(){
 		Vertex rVertex=new Vertex(0,0);
-		int maxradious=5;
-		int minradious=1;
+		int maxradious=600;
+		int minradious=0;
 		
-		rVertex.x=(float)(minradious+(maxradious-minradious)*Math.random())+((Vertex)vertices.get(vertices.size())).x;
-		rVertex.y=(float)(minradious+(maxradious-minradious)*Math.random())+((Vertex)vertices.get(vertices.size())).y;
+		rVertex.x=(float)(minradious+(maxradious-minradious)*Math.random());//+goal.x;
+		rVertex.y=(float)(minradious+(maxradious-minradious)*Math.random());//+goal.y;
+		//rVertex.print();
+		
 		return rVertex;
 	}
-	public void extendRRT(ArrayList vertices, Vertex v){
+	
+	public void extendRRT(ArrayList vertices, ArrayList edges, Vertex v){
+		Vertex q_near=new Vertex(0,0);
+		Vertex q_new=new Vertex(0,0);
 		
-		//Find closest neighbor of v in T
+		//q_near <---- Find closest neighbor of v in T
 		int localdistance=Integer.MAX_VALUE;
 		for(int i=0;i<vertices.size();i++){
 			if(((Vertex)vertices.get(i)).distanceToVertex(v)<localdistance){
 				localdistance=(int)((Vertex)vertices.get(i)).distanceToVertex(v);
+				q_near=(Vertex)vertices.get(i);
 			}
 		}
+		
+		//q_new 
+		q_new.x=q_near.x+(float)(step_size*Math.cos((double)Math.atan2(v.y-q_near.y,v.x-q_near.x )));
+		q_new.y=q_near.y+(float)(step_size*Math.sin((double)Math.atan2(v.y-q_near.y,v.x-q_near.x )));
+		
+		//Check Collision Free
+		Edge tempEdge=new Edge(q_near,q_new);
+		if(isCollisonFree(tempEdge)){
+			vertices.add(q_new);
+			edges.add(tempEdge);
+		}
 	}
+	
+	public boolean isCollisonFree(Edge e){
+		boolean isCFree=true;
+		for(int i=1; i<origObstacles.size();i++){
+			for(int j=0;j<((Obstacle)origObstacles.get(i)).edges.size();j++){
+				if(lineSegmentIntersection(e.v1,e.v2,((Edge)((Obstacle)origObstacles.get(i)).edges.get(j)))){
+					isCFree=false;
+					break;
+				}
+			}
+		}
+		return isCFree; 
+	}
+	
+	boolean lineSegmentIntersection(Vertex _start, Vertex _end, Edge other_line)
+    {
+        float denom = ((other_line.v2.y - other_line.v1.y)*(_end.x - _start.x)) -
+                      ((other_line.v2.x - other_line.v1.x)*(_end.y - _start.y));
+
+        float nume_a = ((other_line.v2.x - other_line.v1.x)*(_start.y - other_line.v1.y)) -
+                       ((other_line.v2.y - other_line.v1.y)*(_start.x - other_line.v1.x));
+
+        float nume_b = ((_end.x - _start.x)*(_start.y - other_line.v1.y)) -
+                       ((_end.y - _start.y)*(_start.x - other_line.v1.x));
+
+        if(denom == 0)
+        {
+            if((nume_a == 0) && (nume_b == 0))
+            {
+                return false; //COINCIDENT;
+            }
+            return false; //PARALLEL;
+        }
+
+        float ua = nume_a / denom;
+        float ub = nume_b / denom;
+
+        if(ua >=0 && ua <=1 && ub >=0 && ub <=1)
+        {
+            // Get the intersection point.
+            //intersection.x_ = begin_.x_ + ua*(end_.x_ - begin_.x_);
+            //intersection.y_ = begin_.y_ + ua*(end_.y_ - begin_.y_);
+
+            return true; //INTERESECTING;
+        }
+
+        return false; //NOT_INTERESECTING;
+    }
 }

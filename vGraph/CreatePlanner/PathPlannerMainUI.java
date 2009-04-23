@@ -217,8 +217,9 @@ public class PathPlannerMainUI extends JFrame implements MouseListener, MouseMot
 		
 		Iterator it = scenemap.obstacles.iterator();
 		Obstacle o;
-		g2.setPaint(new Color(91,45,45));
-				 
+		//g2.setPaint(new Color(91,45,45));
+		//Draw Tree from start point 
+				
 		if (this.drawRRTStartGoal) {
 			g2.setPaint(Color.cyan);
 			it = rrt.origObstacles.iterator();
@@ -239,6 +240,26 @@ public class PathPlannerMainUI extends JFrame implements MouseListener, MouseMot
 			drawCircle(rrt.goal, g2);
 		}
 		
+		//Draw Tree from goal point 
+		if (rrt.mergedEdges!=null) {
+			g2.setPaint(Color.green);
+			Edge goalTree[] = (Edge[]) rrt.mergedEdges.toArray(new Edge[0]);
+			this.drawEdges(goalTree, g2);
+		}
+		
+		if (rrt.startEdges!=null) {
+			g2.setPaint(Color.blue);
+			Edge startTree[] = (Edge[]) rrt.startEdges.toArray(new Edge[0]);
+			this.drawEdges(startTree, g2);
+		}
+		
+		//Draw Tree from goal point 
+		if (rrt.goalEdges!=null) {
+			g2.setPaint(Color.red);
+			Edge goalTree[] = (Edge[]) rrt.goalEdges.toArray(new Edge[0]);
+			this.drawEdges(goalTree, g2);
+		}
+		
 	}
 	
 	private void drawCircle(Vertex v, Graphics2D g2) {
@@ -257,9 +278,9 @@ public class PathPlannerMainUI extends JFrame implements MouseListener, MouseMot
 	}
 	
 	private void drawEdges(Edge[] e, Graphics2D g2) {
-			Vertex v1, v2; 
-			int x1,x2,y1,y2; 
-			for (int i=0; i<e.length; i++) {
+		Vertex v1, v2; 
+		int x1,x2,y1,y2; 
+		for (int i=0; i<e.length; i++) {
 			
 			v1 = e[i].v1;
 			v2 = e[i].v2; 
