@@ -30,11 +30,7 @@ public class RapidlyExploringRandomTree {
 	ArrayList<Edge> startEdges;
 	ArrayList<Edge> goalEdges;
 	ArrayList<Edge> mergedEdges;
-
-	/**
-	 * Shortest path computed from Visibility graph
-	 */
-	public ArrayList<Edge> shortestPath;
+	ArrayList<Edge> shortestEdges;
 
 	/**
 	 * Starting point for robot
@@ -169,10 +165,14 @@ public class RapidlyExploringRandomTree {
 		boolean isNotTreeMerged=true;
 		startVertices=new ArrayList();
 		goalVertices=new ArrayList();
+		mergedVertices=new ArrayList();
 		startEdges=new ArrayList();
 		goalEdges=new ArrayList();
+		mergedEdges=new ArrayList();
+		shortestEdges=new ArrayList();
+		
 		//ArrayList startTree =new ArrayList();
-		//ArrayList goalTree =new ArrayList();
+		//ArrayList goalTree =new ArraytList();
 		
 		startVertices.add(start);
 		goalVertices.add(goal);
@@ -200,28 +200,101 @@ public class RapidlyExploringRandomTree {
 				}
 			}
 			
-//			if(startVertices.get(startVertices.size()-1).distanceToVertex(goal)<=step_size){
-//			//if(goalVertices.get(goalVertices.size()-1).distanceToVertex(start)<=step_size){
-//			//if(startVertices.size()>=19){
-//					isNotTreeMerged=false;
-//			}
 			//System.out.println(startVertices.size());
 		}
+		System.out.println("Start and Goal Tree is done.");
 		
-		//Merge Tree : TODO : Debug Here !!!!
-//		for(int i=0;i<startVertices.size();i++){
-//			mergedVertices.add(new Vertex(((Vertex)startVertices.get(i)).x,((Vertex)startVertices.get(i)).y));
-//		}
-//		for(int i=0;i<startEdges.size();i++){
-//			mergedEdges.add(new Edge(((Edge)startEdges.get(i)).v1,((Edge)startEdges.get(i)).v2));
-//		}
-//		for(int i=0;i<goalVertices.size();i++){
-//			mergedVertices.add(new Vertex(((Vertex)goalVertices.get(i)).x,((Vertex)goalVertices.get(i)).y));
-//		}
-//		mergedEdges.add(new Edge((Vertex)startVertices.get(startMergedVertex),(Vertex)goalVertices.get(goalMergedVertex)));
-//		for(int i=0;i<goalEdges.size();i++){
-//			mergedEdges.add(new Edge(((Edge)goalEdges.get(i)).v1,((Edge)goalEdges.get(i)).v2));
-//		}
+		//Merge Tree : 
+		for(int i=0;i<startVertices.size();i++){
+			mergedVertices.add(new Vertex(((Vertex)startVertices.get(i)).x,((Vertex)startVertices.get(i)).y));
+		}
+		for(int i=0;i<startEdges.size();i++){
+			mergedEdges.add(new Edge(((Edge)startEdges.get(i)).v1,((Edge)startEdges.get(i)).v2));
+		}
+		for(int i=0;i<goalVertices.size();i++){
+			mergedVertices.add(new Vertex(((Vertex)goalVertices.get(i)).x,((Vertex)goalVertices.get(i)).y));
+		}
+		mergedEdges.add(new Edge((Vertex)startVertices.get(startMergedVertex),(Vertex)goalVertices.get(goalMergedVertex)));
+		for(int i=0;i<goalEdges.size();i++){
+			mergedEdges.add(new Edge(((Edge)goalEdges.get(i)).v1,((Edge)goalEdges.get(i)).v2));
+		}
+		System.out.println("Merged Tree done.");
+		//Find Shortest Path
+		calculateShortestPath();
+	}
+	
+	public void calculateShortestPath() { 
+		/**
+		 * Insert your code here
+		 */
+		double tempDistance=0;
+		double localShortestDistance=Integer.MAX_VALUE;
+		int indexShortestEdge=0;
+		Vertex goalDirection=new Vertex(0,0);
+//		ArrayList<Vertex> mergedVertices = new ArrayList();
+		Vertex localShortestVertex =new Vertex(0,0);
+		
+		boolean[] isVertexValid=new boolean[mergedVertices.size()];
+		double[] VertexDistance = new double[mergedVertices.size()];
+		int[] previousVertex=new int[mergedVertices.size()];
+		int currentVertex=0;
+		
+		for(int i=0;i<mergedVertices.size();i++){
+			VertexDistance[i]=Integer.MAX_VALUE;//((Edge)verticesGraph.get(i)).v1.distanceToVertex(((Edge)verticesGraph.get(i)).v2);
+			isVertexValid[i]=true;
+		}
+		VertexDistance[0]=0;		//start point
+		
+		
+		while(!goal.equals(mergedVertices.get(currentVertex))){
+			indexShortestEdge=0;
+			localShortestDistance=Integer.MAX_VALUE;
+			boolean replaceFlag=false;
+			
+			//Find smallest distance vertex
+			for(int i=0;i<mergedVertices.size();i++){
+				if(isVertexValid[i]==true){
+					if(VertexDistance[i]<localShortestDistance){
+						localShortestDistance=VertexDistance[i];
+						currentVertex=i;
+					}
+				}
+			}
+			
+			//Find shortest path from the latest vertices to neighbors
+			for(int i=0;i<mergedEdges.size();i++){
+//				previousFlag=false;
+				if(((Edge)mergedEdges.get(i)).v1.equals(mergedVertices.get(currentVertex))){
+					if(isVertexValid[mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v2)]==true){
+						tempDistance=VertexDistance[currentVertex]+mergedVertices.get(currentVertex).distanceToVertex(((Edge)mergedEdges.get(i)).v2);
+						if(tempDistance<VertexDistance[mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v2)]){
+							VertexDistance[mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v2)]=tempDistance;	
+							previousVertex[mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v2)]=mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v1);
+						}
+					}
+				}else if(((Edge)mergedEdges.get(i)).v2.equals(mergedVertices.get(currentVertex))){
+					if(isVertexValid[mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v1)]==true){
+						tempDistance=VertexDistance[currentVertex]+mergedVertices.get(currentVertex).distanceToVertex(((Edge)mergedEdges.get(i)).v1);
+						if(tempDistance<VertexDistance[mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v1)]){
+							VertexDistance[mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v1)]=tempDistance;	
+							previousVertex[mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v1)]=mergedVertices.indexOf(((Edge)mergedEdges.get(i)).v2);
+						}
+					}
+				}
+			}	
+			isVertexValid[currentVertex]=false;
+		}
+		
+		//make shortest Path
+		shortestEdges.add(0, new Edge(mergedVertices.get(previousVertex[mergedVertices.indexOf(goal)]),goal));
+		while(!shortestEdges.get(0).v1.equals(start)){
+			shortestEdges.add(0, new Edge(mergedVertices.get(previousVertex[mergedVertices.indexOf(shortestEdges.get(0).v1)]),shortestEdges.get(0).v1));
+		}
+
+		//Show shortest Path
+		//for(int i=0;i<shortestPath.size();i++){
+		//	System.out.println(((Edge)shortestPath.get(i)).toString());
+		//}
 	}
 	
 	public Vertex vRandom(){
@@ -263,7 +336,7 @@ public class RapidlyExploringRandomTree {
 	
 	public boolean isCollisonFree(Edge e){
 		boolean isCFree=true;
-		for(int i=1; i<origObstacles.size();i++){
+		for(int i=0; i<origObstacles.size();i++){
 			for(int j=0;j<((Obstacle)origObstacles.get(i)).edges.size();j++){
 				if(lineSegmentIntersection(e.v1,e.v2,((Edge)((Obstacle)origObstacles.get(i)).edges.get(j)))){
 					isCFree=false;

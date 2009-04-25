@@ -1,5 +1,6 @@
 package CreatePlanner;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -221,7 +222,7 @@ public class PathPlannerMainUI extends JFrame implements MouseListener, MouseMot
 		//Draw Tree from start point 
 				
 		if (this.drawRRTStartGoal) {
-			g2.setPaint(Color.cyan);
+			g2.setPaint(Color.gray);
 			it = rrt.origObstacles.iterator();
 			//int i=0;
 			while (it.hasNext()) {
@@ -242,7 +243,7 @@ public class PathPlannerMainUI extends JFrame implements MouseListener, MouseMot
 		
 		//Draw Tree from goal point 
 		if (rrt.mergedEdges!=null) {
-			g2.setPaint(Color.green);
+			g2.setPaint(Color.red);
 			Edge goalTree[] = (Edge[]) rrt.mergedEdges.toArray(new Edge[0]);
 			this.drawEdges(goalTree, g2);
 		}
@@ -255,11 +256,18 @@ public class PathPlannerMainUI extends JFrame implements MouseListener, MouseMot
 		
 		//Draw Tree from goal point 
 		if (rrt.goalEdges!=null) {
-			g2.setPaint(Color.red);
+			g2.setPaint(Color.green);
 			Edge goalTree[] = (Edge[]) rrt.goalEdges.toArray(new Edge[0]);
 			this.drawEdges(goalTree, g2);
 		}
 		
+		//Draw shortest path 
+		if (rrt.shortestEdges!=null) {
+			g2.setPaint(Color.red);
+			g2.setStroke(new BasicStroke(2));
+			Edge goalTree[] = (Edge[]) rrt.shortestEdges.toArray(new Edge[0]);
+			this.drawEdges(goalTree, g2);
+		}
 	}
 	
 	private void drawCircle(Vertex v, Graphics2D g2) {
