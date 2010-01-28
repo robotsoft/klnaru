@@ -2,17 +2,19 @@
 #include "TX60L.h"
 #include <iostream>
 #include <algorithm>
-
+#include <ros/ros.h>
+#include <std_msgs/String.h>
+#include <sstream>
 
 void print(double e){
 	std::cout << " " << e;
 }
 
-int main(){
+int main(int argc, char** argv){
 	TX60L robot;
 	//robot.Login("http://192.168.1.254:5653/", "default", "");
 	//robot.Login("http://localhost:5653/", "default", "");
-        robot.Login("http://128.59.20.63:5653/", "default", ""); //ANTIGUA
+    robot.Login("http://128.59.20.63:5653/", "default", ""); //ANTIGUA
 	//robot.Login("http://128.59.19.61:5653/", "default", ""); //Thomas' computer
 	robot.Power(true);
 	std::vector<double> j, min, max,r,targetPos,targetJoint;
@@ -41,8 +43,24 @@ int main(){
 		std::cout <<"wrong\n";
 
 	//Publish current position
-	
-	
+	ros::init(argc, argv, "Tester");
+	ros::NodeHandle n;
+	ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 100);
+	ros::Rate loop_rate(5);
+	int count = 0;
+	while (ros::ok())
+	{
+		std::stringstream ss;
+		ss << "Hello there! This is message [" << count << "]";
+		std_msgs::String msg;
+		msg.data = ss.str();
+		chatter_pub.publish(msg);
+		ROS_INFO("I published [%s]", ss.str().c_str());
+		ros::spinOnce();
+		loop_rate.sleep();
+		++count;
+	}
+
 	return 0;
 	
 	//------------- Test V3 ------------------------
