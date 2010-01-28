@@ -1,0 +1,6 @@
+vx_axis: 1
+wz_axis: 2
+vx_scale:  0.45
+wz_scale:  0.9
+enable: 4
+passthrough: 6
