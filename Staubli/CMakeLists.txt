@@ -20,7 +20,7 @@ rosbuild_init()
 #uncomment if you have defined messages
 #rosbuild_genmsg()
 #uncomment if you have defined services
-#rosbuild_gensrv()
+rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
 rosbuild_add_library(soapC src/soapC.cpp)
@@ -38,3 +38,5 @@ target_link_libraries(test_staubli Server3)
 target_link_libraries(test_staubli stdsoap2)
 target_link_libraries(test_staubli tx60l)
 
+rosbuild_add_executable(MainController src/MainController.cpp)
+rosbuild_add_executable(controller src/controller.cpp)
