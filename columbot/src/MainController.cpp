@@ -7,7 +7,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
-#include <columbot/staubli.h>
+#include <command.h>		//use message of staubli package; why didn't this file include remotely?
 
 void chatterCallback(const std_msgs::StringConstPtr& msg)
 {
@@ -21,9 +21,9 @@ int main(int argc, char** argv)
   //ros::Subscriber chatter_sub = n.subscribe("chatter", 100, chatterCallback);
   //ros::spin();
 
-  ros::ServiceClient client = n.serviceClient<columbot::staubli>("staubli");
-  columbot::staubli staubli_srv;
-  staubli_srv.request.command = 1;
+  ros::ServiceClient client = n.serviceClient<staubli::command>("command");
+  staubli::command staubli_srv;
+  staubli_srv.request.command_number = 1;
   if (client.call(staubli_srv))
   {
     ROS_INFO("Staubli Postion x : %f", staubli_srv.response.x);
@@ -44,4 +44,6 @@ int main(int argc, char** argv)
   //Move robot arm to the target position
 	  //send a message
   //Grasp target
+
+  return 0;
 }
