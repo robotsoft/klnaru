@@ -34,12 +34,12 @@ int main(int argc, char** argv)
   staubli_srv.request.command_number = 1;
   if (client.call(staubli_srv))
   {
-    ROS_INFO("Staubli Postion x : %f", staubli_srv.response.x);
-    ROS_INFO("Staubli Postion y : %f", staubli_srv.response.y);
-    ROS_INFO("Staubli Postion z : %f", staubli_srv.response.z);
-    ROS_INFO("Staubli Postion theta_x : %f", staubli_srv.response.theta_x);
-    ROS_INFO("Staubli Postion theta_y : %f", staubli_srv.response.theta_y);
-    ROS_INFO("Staubli Postion theta_z : %f", staubli_srv.response.theta_z);
+    ROS_INFO("Staubli Postion x : %f [m]", staubli_srv.response.x);
+    ROS_INFO("Staubli Postion y : %f [m]", staubli_srv.response.y);
+    ROS_INFO("Staubli Postion z : %f [m]", staubli_srv.response.z);
+    ROS_INFO("Staubli Postion theta_x : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_x));
+    ROS_INFO("Staubli Postion theta_y : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_y));
+    ROS_INFO("Staubli Postion theta_z : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_z));
   }
   else
   {
@@ -47,9 +47,8 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  //Debug here !!
   //Move joints
-  staubli_srv.request.command_number = 2;
+  staubli_srv.request.command_number = 3;
   staubli_srv.request.joint1 = DEGREE_2_RADIAN(54.18);
   staubli_srv.request.joint2 = DEGREE_2_RADIAN(-30.31);
   staubli_srv.request.joint3 = DEGREE_2_RADIAN(56.6);
@@ -59,12 +58,29 @@ int main(int argc, char** argv)
 
   if (client.call(staubli_srv))
   {
-    ROS_INFO("Staubli joint 1 : %f", staubli_srv.response.joint1);
-    ROS_INFO("Staubli joint 2 : %f", staubli_srv.response.joint2);
-    ROS_INFO("Staubli joint 3 : %f", staubli_srv.response.joint3);
-    ROS_INFO("Staubli joint 4 : %f", staubli_srv.response.joint4);
-    ROS_INFO("Staubli joint 5 : %f", staubli_srv.response.joint5);
-    ROS_INFO("Staubli joint 6 : %f", staubli_srv.response.joint6);
+    ROS_INFO("Staubli joint 1 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint1));
+    ROS_INFO("Staubli joint 2 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint2));
+    ROS_INFO("Staubli joint 3 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint3));
+    ROS_INFO("Staubli joint 4 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint4));
+    ROS_INFO("Staubli joint 5 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint5));
+    ROS_INFO("Staubli joint 6 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint6));
+  }
+  else
+  {
+    ROS_ERROR("Failed to call service staubli");
+    return 1;
+  }
+
+  //Get current joints
+  staubli_srv.request.command_number = 2;
+  if (client.call(staubli_srv))
+  {
+    ROS_INFO("Staubli joint 1 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint1));
+    ROS_INFO("Staubli joint 2 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint2));
+    ROS_INFO("Staubli joint 3 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint3));
+    ROS_INFO("Staubli joint 4 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint4));
+    ROS_INFO("Staubli joint 5 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint5));
+    ROS_INFO("Staubli joint 6 : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.joint6));
   }
   else
   {
@@ -73,9 +89,8 @@ int main(int argc, char** argv)
   }
 
 
-
   //Senario 1
-  //Got target position
+  //Get target position
 
   //Move robot arm to the target position
 	  //send a message
