@@ -12,8 +12,8 @@
 #include <std_msgs/String.h>
 #include <sstream>
 #include "staubli/command.h"		//command service of staubli
+#include "controller.h"
 
-//static TX60L robot;
 
 void print(double e){
 	std::cout << " " << e;
@@ -22,8 +22,7 @@ void print(double e){
 int GetPosition(staubli::command::Response *res){
 
 	TX60L robot;
-    robot.Login("http://128.59.20.63:5653/", "default", ""); //ANTIGUA
-	//robot.Login("http://128.59.19.61:5653/", "default", ""); //Thomas' computer
+	robot.Login(STAUBLI_IP, "default", "");
 	robot.Power(true);
 	ROS_INFO("Staubli is connected !!.");
 
@@ -49,8 +48,7 @@ int GetPosition(staubli::command::Response *res){
 int GetJoints(staubli::command::Response *res){
 
 	TX60L robot;
-    robot.Login("http://128.59.20.63:5653/", "default", ""); //ANTIGUA
-	//robot.Login("http://128.59.19.61:5653/", "default", ""); //Thomas' computer
+	robot.Login(STAUBLI_IP, "default", "");
 	robot.Power(true);
 	ROS_INFO("Staubli is connected !!.");
 
@@ -77,8 +75,7 @@ int MoveJoints(staubli::command::Request  *req,
 			   staubli::command::Response *res)
 {
 	TX60L robot;
-    robot.Login("http://128.59.20.63:5653/", "default", ""); //ANTIGUA
-	//robot.Login("http://128.59.19.61:5653/", "default", ""); //Thomas' computer
+	robot.Login(STAUBLI_IP, "default", "");
 	robot.Power(true);
 	ROS_INFO("Staubli is connected !!.");
 
@@ -94,8 +91,8 @@ int MoveJoints(staubli::command::Request  *req,
 	robot.MoveJoints(target_joints);
 
 	//Get Current joints
-	for_each(target_joints.begin(), target_joints.end(), print);
-	std::cout <<"\n";
+//	for_each(target_joints.begin(), target_joints.end(), print);
+//	std::cout <<"\n";
 	res->joint1 = target_joints[0];
 	res->joint2 = target_joints[1];
 	res->joint3 = target_joints[2];
@@ -107,6 +104,8 @@ int MoveJoints(staubli::command::Request  *req,
 	robot.Logoff();
 }
 
+// handler for command service
+// See command.srv
 bool commandhandler(staubli::command::Request  &req,
 					staubli::command::Response &res ){
 
@@ -122,11 +121,6 @@ bool commandhandler(staubli::command::Request  &req,
 }
 
 int main(int argc, char** argv){
-
-	//TX60L robot;
-    //robot.Login("http://128.59.20.63:5653/", "default", ""); //ANTIGUA
-	//robot.Login("http://128.59.19.61:5653/", "default", ""); //Thomas' computer
-	//robot.Power(true);
 
 	ros::init(argc, argv, "staubli_server");
 	ros::NodeHandle n;
