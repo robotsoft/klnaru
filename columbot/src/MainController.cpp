@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  Get current joints
+  //Get current joints
   staubli_srv.request.command_number = 2;
   if (client.call(staubli_srv))
   {
@@ -89,6 +89,29 @@ int main(int argc, char** argv)
   }
 
 
+  //Move line
+  staubli_srv.request.command_number = 4;
+  staubli_srv.request.x = 0.09929; //unit : meter
+  staubli_srv.request.y = 0.54831;
+  staubli_srv.request.z = 0.59587;
+  staubli_srv.request.theta_x = DEGREE_2_RADIAN(-70.11);
+  staubli_srv.request.theta_y = DEGREE_2_RADIAN(14.59);
+  staubli_srv.request.theta_z = DEGREE_2_RADIAN(73.62);
+
+  if (client.call(staubli_srv))
+  {
+      ROS_INFO("Staubli Postion x : %f [m]", staubli_srv.response.x);
+      ROS_INFO("Staubli Postion y : %f [m]", staubli_srv.response.y);
+      ROS_INFO("Staubli Postion z : %f [m]", staubli_srv.response.z);
+      ROS_INFO("Staubli Postion theta_x : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_x));
+      ROS_INFO("Staubli Postion theta_y : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_y));
+      ROS_INFO("Staubli Postion theta_z : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_z));
+  }
+  else
+  {
+    ROS_ERROR("Failed to call service staubli");
+    return 1;
+  }
   //Senario 1
   //Get target position
 

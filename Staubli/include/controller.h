@@ -19,6 +19,8 @@ int GetPosition(staubli::command::Response *res);
 int GetJoints(staubli::command::Response *res);
 int MoveJoints(staubli::command::Request  *req,
 			   staubli::command::Response *res);
+int MoveStraightLine(staubli::command::Request  *req,
+					 staubli::command::Response *res);
 bool commandhandler(staubli::command::Request  &req,
 					staubli::command::Response &res );
 

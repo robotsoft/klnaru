@@ -104,6 +104,38 @@ int MoveJoints(staubli::command::Request  *req,
 	robot.Logoff();
 }
 
+int MoveStraightLine(staubli::command::Request  *req,
+					 staubli::command::Response *res)
+{
+	TX60L robot;
+	robot.Login(STAUBLI_IP, "default", "");
+	robot.Power(true);
+	ROS_INFO("Staubli is connected !!.");
+
+	//Move joints
+	std::vector<double> target_pos;
+	target_pos.push_back(req->x);
+	target_pos.push_back(req->y);
+	target_pos.push_back(req->z);
+	target_pos.push_back(req->theta_x);
+	target_pos.push_back(req->theta_y);
+	target_pos.push_back(req->theta_z);
+	robot.ResetMotion();
+	robot.MoveLine(target_pos);
+
+	//Get Current joints
+//	for_each(target_joints.begin(), target_joints.end(), print);
+//	std::cout <<"\n";
+	res->x = target_pos[0];
+	res->y = target_pos[1];
+	res->z = target_pos[2];
+	res->theta_x  = target_pos[3];
+	res->theta_y  = target_pos[4];
+	res->theta_z  = target_pos[5];
+
+	//Log off staubli
+	robot.Logoff();
+}
 // handler for command service
 // See command.srv
 bool commandhandler(staubli::command::Request  &req,
@@ -114,6 +146,7 @@ bool commandhandler(staubli::command::Request  &req,
 		case 1 : GetPosition(&res); break;
 		case 2 : GetJoints(&res);break;
 		case 3 : MoveJoints(&req,&res);break;
+		case 4 : MoveStraightLine(&req,&res);break;
 		default: break;
 	}
 	return true;
