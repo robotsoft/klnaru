@@ -8,7 +8,7 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 //#include <staubli/command.h>
-#include <command.h>		//use message of staubli package; why didn't this file include remotely?
+#include <staubli/command.h>
 
 
 #define PI 3.14
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  //Get current joints
+  Get current joints
   staubli_srv.request.command_number = 2;
   if (client.call(staubli_srv))
   {
