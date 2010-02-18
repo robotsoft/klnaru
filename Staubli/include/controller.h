@@ -21,6 +21,8 @@ int MoveJoints(staubli::command::Request  *req,
 			   staubli::command::Response *res);
 int MoveStraightLine(staubli::command::Request  *req,
 					 staubli::command::Response *res);
+int ForwardKinematics(staubli::command::Request  *req,
+					 staubli::command::Response *res);
 bool commandhandler(staubli::command::Request  &req,
 					staubli::command::Response &res );
 
