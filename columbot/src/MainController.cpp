@@ -14,11 +14,6 @@
 #define DEGREE_2_RADIAN(X) (X*PI/180)
 #define RAIDAN_2_DEGREE(X) (X*180/PI)
 
-void chatterCallback(const std_msgs::StringConstPtr& msg)
-{
-  ROS_INFO("Received [%s]", msg->data.c_str());
-}
-
 //Test for get current Cartesian position
 int testCurrentPosition(ros::ServiceClient client, staubli::command staubli_srv)
 {
@@ -133,9 +128,9 @@ int testForwardKinematics(ros::ServiceClient client, staubli::command staubli_sr
 	  ROS_INFO("Staubli Position x : %f [m]", staubli_srv.response.x);
 	  ROS_INFO("Staubli Position y : %f [m]", staubli_srv.response.y);
 	  ROS_INFO("Staubli Position z : %f [m]", staubli_srv.response.z);
-	  ROS_INFO("Staubli Position theta_x : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_x));
-	  ROS_INFO("Staubli Position theta_y : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_y));
-	  ROS_INFO("Staubli Position theta_z : %f [degree]", RAIDAN_2_DEGREE(staubli_srv.response.theta_z));
+	  ROS_INFO("Staubli Position theta_x : %f [degree]", staubli_srv.response.theta_x);
+	  ROS_INFO("Staubli Position theta_y : %f [degree]", staubli_srv.response.theta_y);
+	  ROS_INFO("Staubli Position theta_z : %f [degree]", staubli_srv.response.theta_z);
 	  return 0;
   }
   else
@@ -177,8 +172,6 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "MainController");
   ros::NodeHandle n;
-  //ros::Subscriber chatter_sub = n.subscribe("chatter", 100, chatterCallback);
-  //ros::spin();
 
   ros::ServiceClient client = n.serviceClient<staubli::command>("command");
   staubli::command staubli_srv;
@@ -190,13 +183,6 @@ int main(int argc, char** argv)
   testMoveLine(client, staubli_srv);
   testForwardKinematics(client, staubli_srv);
   testInverseKinematics(client, staubli_srv);
-
-  //Senario 1
-  //Get target position
-
-  //Move robot arm to the target position
-	  //send a message
-  //Grasp target
 
   return 0;
 }

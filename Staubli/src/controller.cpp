@@ -155,9 +155,10 @@ int ForwardKinematics(staubli::command::Request  *req,
 	target_joints.push_back(req->joint5);
 	target_joints.push_back(req->joint6);
 
-	robot.ForwardKinematics(target_joints,result_pos);    // Unit : meter, radian
+	robot.ForwardKinematics(target_joints,result_pos);
 
 	//save the result position into response of the command service
+	// Unit : meter, degree
 	res->x = result_pos[0];
 	res->y = result_pos[1];
 	res->z = result_pos[2];
