@@ -1,0 +1,23 @@
+Motion Detector
+
+Copyright © Andrew Kirillov, 2005
+andrew.kirillov@gmail.com
+
+
+The program is FREE for any non commercial usage. In the case of
+modifying and/or redistributing the code it's obligate to retain
+the original copyright notice.  It is not allowed to create your
+own commercial products on the basis of the program or any parts
+of it.
+
+
+Please, contact me for any offers, remarks, ideas, etc.
+
+Ported to .NET 2.0 and ClickOnce 
+with additional mods by 
+Scott Hanselman - http://www.computerzen.com
+for an MSDN Coding4Fun Article http://www.msdn.com/coding4fun
+
+Laser tracking code by
+Ashish Derhgawen - http://ashishrd.blogspot.com
+E-mail: ashish.derhgawen@gmail.com
