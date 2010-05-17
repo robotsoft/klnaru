@@ -720,12 +720,12 @@ void Camera1394::readData(sensor_msgs::Image& image)
       break;
     case DC1394_VIDEO_MODE_640x480_MONO16:
 	  image.step=image.width;
-	  image_size = image.height*image.step;
+	  image_size = image.height*image.step*2;		//image size should be double size of image size because each pixel has 16 bit data.
 	  image.encoding = "mono8";
 	  image.set_data_size (image_size);
 	  memcpy(&image.data[0], capture_buffer, image_size);
-      //RAW16/MONO16 : MSB - left camera, LSB -right camera
-      if (DC1394_SUCCESS != dc1394_deinterlace_stereo(reinterpret_cast<unsigned char *> (capture_buffer), reinterpret_cast<unsigned char *> (&image.data[0]), image.width, image.height)){
+      //RAW16/MONO16 : MSB - right camera, left -right camera
+      if (DC1394_SUCCESS != dc1394_deinterlace_stereo(reinterpret_cast<unsigned char *> (capture_buffer), reinterpret_cast<unsigned char *> (&image.data[0]), image.width, image.height*2)){
 			  ROS_ERROR("Unable to deinterlace stereo image");
 		      SafeCleanup();
 			  return ;

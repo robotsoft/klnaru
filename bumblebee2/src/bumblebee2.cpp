@@ -429,8 +429,8 @@ public:
 
 			left_image_.set_data_size (image_size);
 			right_image_.set_data_size (image_size);
-			memcpy(&right_image_.data[0], &image_.data[0], image_size);
-			memcpy(&left_image_.data[0], &image_.data[image_size], image_size);
+			memcpy(&right_image_.data[0], &image_.data[0], image_size);		// the image of right camera is the first half of the deinterlaced image.
+			memcpy(&left_image_.data[0], &image_.data[image_size], image_size);		// the image of left camera is the second half of the deinterlaced image.
 
 			//1 pixel is stored in the order of RGB
 			//buffer data is stored as right_image.R,left_image_G,right_image_B
