@@ -96,6 +96,8 @@ void Camera1394::findVideoMode(const char* mode)
     videoMode_ = DC1394_VIDEO_MODE_640x480_YUV422;
   else if (0 == strcmp(mode, "640x480_rgb"))
     videoMode_ = DC1394_VIDEO_MODE_640x480_RGB8;
+  else if (0 == strcmp(mode, "640x480_stereo_rgb"))
+      videoMode_ = DC1394_VIDEO_MODE_640x480_MONO16;
   else if (0 == strcmp(mode, "800x600_mono"))
     videoMode_ = DC1394_VIDEO_MODE_800x600_MONO8;
   else if (0 == strcmp(mode, "800x600_yuv422"))
@@ -666,7 +668,8 @@ void Camera1394::readData(sensor_msgs::Image& image)
       image.width = frame->size[0];
       image.height = frame->size[1];
       capture_buffer = reinterpret_cast<uint8_t *>(frame->image);
-      //ROS_INFO("Image size is %d x %d", frame->size[0],frame->size[1]);
+      //ROS_INFO("Image size is %d x %d", frame->size[0],frame->size[1]); // added by joseph
+      //ROS_INFO("Data depth is %d\n", frame->data_depth);	// added by joseph
     }
 
   assert(capture_buffer);
@@ -715,6 +718,19 @@ void Camera1394::readData(sensor_msgs::Image& image)
           memcpy(&image.data[0], capture_buffer, image_size);
         }
       break;
+    case DC1394_VIDEO_MODE_640x480_MONO16:
+	  image.step=image.width;
+	  image_size = image.height*image.step;
+	  image.encoding = "mono8";
+	  image.set_data_size (image_size);
+	  memcpy(&image.data[0], capture_buffer, image_size);
+      //RAW16/MONO16 : MSB - left camera, LSB -right camera
+      if (DC1394_SUCCESS != dc1394_deinterlace_stereo(reinterpret_cast<unsigned char *> (capture_buffer), reinterpret_cast<unsigned char *> (&image.data[0]), image.width, image.height)){
+			  ROS_ERROR("Unable to deinterlace stereo image");
+		      SafeCleanup();
+			  return ;
+      }
+	  break;
     default:
       CAM_EXCEPT(bumblebee2::Exception, "Unknown image mode");
       return;

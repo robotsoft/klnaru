@@ -409,38 +409,39 @@ public:
   {
         // get current CameraInfo data
         cam_info_ = cinfo_->getCameraInfo();
-        left_image_.header.frame_id = right_image_.header.frame_id = cam_info_.header.frame_id = frame_id_;
+        left_image_.header.frame_id = right_image_.header.frame_id = image_.header.frame_id = cam_info_.header.frame_id = frame_id_;
 
         try
           {
             // Read data from the Camera
-            dev_->readData(right_image_);
+            dev_->readData(image_);
 
-            cam_info_.header.stamp = left_image_.header.stamp = right_image_.header.stamp;
-            cam_info_.height = left_image_.height = right_image_.height;
-            cam_info_.width = left_image_.width = right_image_.width;
+            cam_info_.header.stamp = left_image_.header.stamp = right_image_.header.stamp=image_.header.stamp;
+            cam_info_.height = left_image_.height = right_image_.height=image_.height;
+            cam_info_.width = left_image_.width = right_image_.width=image_.width;
             if (encoding_ != "")
-              right_image_.encoding = encoding_; // override driver setting
-            left_image_.encoding = right_image_.encoding ;
+              image_.encoding = encoding_; // override driver setting
+            left_image_.encoding = right_image_.encoding = image_.encoding;
 
 			//Split image into left image and right image
-			left_image_.step = right_image_.step = right_image_.step;
-			int image_size = left_image_.height*left_image_.step;
+			left_image_.step = right_image_.step = image_.step;
+			int image_size = image_.height*image_.step;
 
 			left_image_.set_data_size (image_size);
-			memcpy(&left_image_.data[0], &right_image_.data[0], image_size);
+			right_image_.set_data_size (image_size);
+			memcpy(&right_image_.data[0], &image_.data[0], image_size);
+			memcpy(&left_image_.data[0], &image_.data[image_size], image_size);
 
 			//1 pixel is stored in the order of RGB
 			//buffer data is stored as right_image.R,left_image_G,right_image_B
-            for(int i=0; i<left_image_.height; i++)
-            	for(int j=0; j<left_image_.width; j++){
-            		left_image_.data[(i*left_image_.width+j)*3]=0;	//Red data is eliminated out
-            		left_image_.data[(i*left_image_.width+j)*3+2]=0;	//Blue data is eliminated out
-            		right_image_.data[(i*left_image_.width+j)*3+1]=0; 	//Green data is eliminated out
-            		//right_image_.data[(i*left_image_.width+j)*3+2]=0; 	//Blue data is eliminated out
-            	}
-
-
+//            for(int i=0; i<left_image_.height; i++)
+//            	for(int j=0; j<left_image_.width; j++){
+//            		left_image_.data[(i*left_image_.width+j)*3]=0;	//Red data is eliminated out
+//            		left_image_.data[(i*left_image_.width+j)*3+2]=0;	//Blue data is eliminated out
+//            		right_image_.data[(i*left_image_.width+j)*3+1]=0; 	//Green data is eliminated out
+//            		//right_image_.data[(i*left_image_.width+j)*3+2]=0; 	//Blue data is eliminated out
+//            	}
+//
             // Publish it via image_transport
 			left_image_pub_.publish(left_image_, cam_info_);
 			right_image_pub_.publish(right_image_, cam_info_);
