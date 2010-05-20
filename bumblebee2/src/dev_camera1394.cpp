@@ -28,6 +28,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+
+// Copyright (C) 2010 Soonhac Hong
+// Add Bumblebee2 into player
+
 #include <stdint.h>
 #include <sensor_msgs/image_encodings.h>
 
@@ -96,7 +100,7 @@ void Camera1394::findVideoMode(const char* mode)
     videoMode_ = DC1394_VIDEO_MODE_640x480_YUV422;
   else if (0 == strcmp(mode, "640x480_rgb"))
     videoMode_ = DC1394_VIDEO_MODE_640x480_RGB8;
-  else if (0 == strcmp(mode, "640x480_stereo_rgb"))
+  else if (0 == strcmp(mode, "640x480_stereo_mono"))		// added by soonhac for bumblebee2
       videoMode_ = DC1394_VIDEO_MODE_640x480_MONO16;
   else if (0 == strcmp(mode, "800x600_mono"))
     videoMode_ = DC1394_VIDEO_MODE_800x600_MONO8;
@@ -630,6 +634,7 @@ void Camera1394::readData(sensor_msgs::Image& image)
   //  CAM_EXCEPT(bumblebee2::Exception, "Read not implemented.");
 
   dc1394video_frame_t * frame = NULL;
+
   dc1394_capture_dequeue (camera_, DC1394_CAPTURE_POLICY_WAIT, &frame);
   if (!frame)
     {
@@ -662,14 +667,11 @@ void Camera1394::readData(sensor_msgs::Image& image)
       image.width = frame2.size[0];
       image.height = frame2.size[1];
     }
-  else
-    {
+  else{
       image.header.stamp=ros::Time(frame->timestamp*1.e-6);
       image.width = frame->size[0];
       image.height = frame->size[1];
       capture_buffer = reinterpret_cast<uint8_t *>(frame->image);
-      //ROS_INFO("Image size is %d x %d", frame->size[0],frame->size[1]); // added by joseph
-      //ROS_INFO("Data depth is %d\n", frame->data_depth);	// added by joseph
     }
 
   assert(capture_buffer);
@@ -692,7 +694,7 @@ void Camera1394::readData(sensor_msgs::Image& image)
       break;
     case DC1394_VIDEO_MODE_640x480_RGB8:
       image.step=image.width*3;
-      image_size = image.height*image.step;
+   	  image_size = image.height*image.step;
       image.encoding = "rgb8";
       image.set_data_size (image_size);
       memcpy(&image.data[0], capture_buffer, image_size);
@@ -718,19 +720,21 @@ void Camera1394::readData(sensor_msgs::Image& image)
           memcpy(&image.data[0], capture_buffer, image_size);
         }
       break;
-    case DC1394_VIDEO_MODE_640x480_MONO16:
+    case DC1394_VIDEO_MODE_640x480_MONO16:		// added by soonhac for bumblebee2
 	  image.step=image.width;
 	  image_size = image.height*image.step*2;		//image size should be double size of image size because each pixel has 16 bit data.
 	  image.encoding = "mono8";
 	  image.set_data_size (image_size);
 	  memcpy(&image.data[0], capture_buffer, image_size);
-      //RAW16/MONO16 : MSB - right camera, left -right camera
+      //capture_buffer stores MONO 16bit data : MSB - right camera, left -right camera
+	  //Deinterlace caputre_buffer into deintrelaced image which consists of 8bit right image and 8bit left image
       if (DC1394_SUCCESS != dc1394_deinterlace_stereo(reinterpret_cast<unsigned char *> (capture_buffer), reinterpret_cast<unsigned char *> (&image.data[0]), image.width, image.height*2)){
 			  ROS_ERROR("Unable to deinterlace stereo image");
 		      SafeCleanup();
 			  return ;
       }
 	  break;
+    break;
     default:
       CAM_EXCEPT(bumblebee2::Exception, "Unknown image mode");
       return;

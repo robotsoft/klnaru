@@ -1,13 +1,12 @@
 <package>
   <description brief="bumblebee2">
-
-     bumblebee2
-
+     bumblebee2 package is based on camera1394 package.
+     When bumblebee2.launch is run, left and right mono image which is formatted by sensor_msgs/image will be published. 
   </description>
   <author>Soonhac Hong</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/bumblebee2</url>
+  <url>http://code.google.com/p/cu-ros-pkg/</url>
   <depend package="image_transport"/>
   <depend package="tf"/>
   <depend package="camera_info_manager"/>

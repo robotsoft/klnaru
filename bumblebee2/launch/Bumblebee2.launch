@@ -3,7 +3,7 @@
 <launch>
   <node pkg="bumblebee2" type="bumblebee2" name="bumblebee2"
 	output="screen" respawn="false">
-    <param name="video_mode" value="640x480_stereo_rgb" />
+    <param name="video_mode" value="640x480_stereo_mono" />
     <param name="fps" value="15" />
     <param name="gain" value="auto" />   
     <param name="brightness" value="auto" /> 

@@ -1,9 +1,18 @@
 /*
  * bumblebee2.cpp
  *
- *  Created on: May 7, 2010
- *      Author: joseph
+ *    Created on: May 7, 2010
+ *        Author: Soonhac Hong
+ *         Note : Most of code of this file is borrowed from camera1394.cpp of camera1394 package.
+ * Modification : In video mode, 640x480_stereo_mono is added to assign the video mode to DC1394_VIDEO_MODE_640x480_MONO16.
+ *                As mono 16bit data(MSB-right camera, LSB-left camera) are captured from bumblebee2,
+ *                deinterlaced image is divided into right and left image and published as sensor_msgs/image in read().
+ *        Usage : $roslaunch bumblebee2 Bumblebee2.launch
+ *                $rosrun image_view image_view image:=/bumblebee2/left/image_raw
+ *                $rosrun image_view image_view image:=/bumblebee2/right/image_raw
  */
+
+
 // $Id: camera1394.cpp 28690 2010-04-09 15:36:33Z joq $
 
 ///////////////////////////////////////////////////////////////////////////
@@ -364,47 +373,6 @@ public:
   }
 
   /** Read camera data */
-//  void read()
-//  {
-//        // get current CameraInfo data
-//        cam_info_ = cinfo_->getCameraInfo();
-//        image_.header.frame_id = cam_info_.header.frame_id = frame_id_;
-//        left_image_.header.frame_id = image_.header.frame_id;
-//        right_image_.header.frame_id = image_.header.frame_id;
-//
-//        try
-//          {
-//            // Read data from the Camera
-//            dev_->readData(image_);
-//
-//            cam_info_.header.stamp = image_.header.stamp;
-//            cam_info_.height = left_image_.height = right_image_.height = image_.height/2;
-//            cam_info_.width = left_image_.width = right_image_.width = image_.width;
-//            if (encoding_ != "")
-//              image_.encoding = left_image_.encoding = right_image_.encoding = encoding_; // override driver setting
-//
-//
-//            //Split image into left image and right image
-//            right_image_.step = left_image_.step = right_image_.width*3;
-//            int image_size = right_image_.height*right_image_.step;
-//            right_image_.encoding = left_image_.encoding = "rgb8";
-//            right_image_.set_data_size (image_size);
-//            left_image_.set_data_size (image_size);
-//            memcpy(&left_image_.data[0], &image_.data[0], image_size);
-//            memcpy(&right_image_.data[0], &image_.data[image_size], image_size);
-//
-//            // Publish it via image_transport
-//            left_image_pub_.publish(left_image_, cam_info_);
-//            right_image_pub_.publish(right_image_, cam_info_);
-//          }
-//        catch (bumblebee2::Exception& e) {
-//          ROS_WARN_STREAM("[" << camera_name_ << "] Exception reading data: "
-//                          << e.what());
-//          //TODO: shut down and exit?
-//        }
-//  }
-
-  /** Read camera data */
   void read()
   {
         // get current CameraInfo data
@@ -426,22 +394,11 @@ public:
 			//Split image into left image and right image
 			left_image_.step = right_image_.step = image_.step;
 			int image_size = image_.height*image_.step;
-
 			left_image_.set_data_size (image_size);
 			right_image_.set_data_size (image_size);
 			memcpy(&right_image_.data[0], &image_.data[0], image_size);		// the image of right camera is the first half of the deinterlaced image.
 			memcpy(&left_image_.data[0], &image_.data[image_size], image_size);		// the image of left camera is the second half of the deinterlaced image.
 
-			//1 pixel is stored in the order of RGB
-			//buffer data is stored as right_image.R,left_image_G,right_image_B
-//            for(int i=0; i<left_image_.height; i++)
-//            	for(int j=0; j<left_image_.width; j++){
-//            		left_image_.data[(i*left_image_.width+j)*3]=0;	//Red data is eliminated out
-//            		left_image_.data[(i*left_image_.width+j)*3+2]=0;	//Blue data is eliminated out
-//            		right_image_.data[(i*left_image_.width+j)*3+1]=0; 	//Green data is eliminated out
-//            		//right_image_.data[(i*left_image_.width+j)*3+2]=0; 	//Blue data is eliminated out
-//            	}
-//
             // Publish it via image_transport
 			left_image_pub_.publish(left_image_, cam_info_);
 			right_image_pub_.publish(right_image_, cam_info_);
@@ -452,7 +409,6 @@ public:
           //TODO: shut down and exit?
         }
   }
-
 }; // end Bumblebee2Node class definition
 
 
@@ -512,7 +468,6 @@ int main(int argc, char **argv)
   // node may stay up without camera open to allow parameter
   // configuration while not running
   if (g_cm->openCamera()){
-	ROS_INFO("OpenCamera() is successful.");		//added by joseph @ 5/7/2010
     g_runLevel = dynamic_reconfigure::SensorLevels::RECONFIGURE_RUNNING;
   }
 
