@@ -146,10 +146,50 @@ void SpaceFinder::findSpace(){
 	cvCanny(bwframe,img_edge,lowThresh*kernelSize*kernelSize,highThresh*kernelSize*kernelSize,kernelSize);
 
 	cvShowImage("Image Processing", img_edge);
-	//viewImage();
 
+	//Calcuate the edge density of each cells
+	int hCells = 10;	// the number of horizontal cell
+	int vCells = 10;		// the number of vertical cell
+	CalculateEdgeDensity(img_edge,hCells, vCells);
+}
 
+/**
+ * Calculate the number of edges of each cell. It will show the number of edges with color scale.
+ * @param img edge image composed of pixels which has 0(white) or 255(black)
+ * @param horizontalCell the number of horizontal cell. The width of the cell can be determined by Image_Width/horizontalCell.
+ * @param verticalCell the number of vertical cell. The height  of the cell can be determined by Image_Height/verticalCell.
+ */
+void SpaceFinder::CalculateEdgeDensity(IplImage* img, int hCells, int vCells){
+	int cellWidth = screen_width/hCells;
+	int cellHeight = screen_height/vCells;
+	struct _cell cell[hCells][vCells];
 
+//	ROS_INFO_STREAM("cell width = " << cellWidth);
+//	ROS_INFO_STREAM("cell height = " << cellHeight);
+
+	//Initialize
+	for(int i=0; i<hCells; i++){
+		for(int j=0; j<vCells; j++){
+			cell[i][j].edges = 0;
+		}
+	}
+
+	for(int i=0; i<screen_width; i++){
+		for(int j=0; j<screen_height; j++){
+			if((unsigned char)*(img->imageData + i*(int)screen_width+j) > 200){		//O means no edges (black in the image)
+//				ROS_INFO_STREAM("("<<i<<","<<j<<") = "<<(unsigned int)*(img->imageData + i*(int)screen_width+j));
+				cell[i/cellWidth][j/cellHeight].edges++;
+			}
+		}
+	}
+
+	//Show the number of edges of each cell with color scale
+	for(int i=0; i<hCells; i++){
+		for(int j=0; j<vCells; j++){
+			ROS_INFO_STREAM("Cell[" << i <<"][" << j << "] = " << cell[i][j].edges);
+		}
+	}
+	ROS_INFO("----------------------------------------");
 }
 
 //============================================================

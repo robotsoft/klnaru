@@ -21,6 +21,7 @@ public:
 	void adjustDistance(char);
 	void viewImage();
 	void findSpace();
+	void CalculateEdgeDensity(IplImage* img, int hCells, int vCells);
 
 	//==================Variables==================
 	bool initialized;
@@ -87,4 +88,11 @@ private:
 	double frames;
 	
 	bool loadImage;
+
+	struct _cell{
+		unsigned int width;		//unit : pixel
+		unsigned int height;		//unit : pixel
+		unsigned int edges;		//Number of edges
+		unsigned int colorIndex;	//color index to show the level of edges
+	};
 };
