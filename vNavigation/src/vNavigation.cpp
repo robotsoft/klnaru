@@ -38,7 +38,8 @@ class visualNavigation
 		justStarted = true;
 		choice = 27;
 		image_pub_ = it_.advertise("vNavigation/image",1);
-		image_sub_ = it_.subscribe("camera1394/camera/image_raw", 1, &visualNavigation::imageCallback, this);		//"camera_1394/camera/image_raw" is the image published from a camera package
+//		image_sub_ = it_.subscribe("camera1394/camera/image_raw", 1, &visualNavigation::imageCallback, this);		//"camera_1394/camera/image_raw" is the image published from a camera package
+		image_sub_ = it_.subscribe("wireless_camera/image", 1, &visualNavigation::imageCallback, this);		//"camera_1394/camera/image_raw" is the image published from a camera package
 	}
 
 	~visualNavigation()
@@ -65,8 +66,7 @@ class visualNavigation
 		{
 			justStarted = false;
 			sf.init();				//Initialize the variables
-		}else
-		{
+		}else{
 			choice = cvWaitKey(10);
 			switch(choice){
 				case 'd' : if(!sf.driving){
@@ -85,6 +85,8 @@ class visualNavigation
 				case 's' : sf.isFinding = !sf.isFinding;break;
 				default : sf.viewImage();
 			}
+			if(sf.driving)
+				sf.driveRobot(choice);
 		}
 	}
 

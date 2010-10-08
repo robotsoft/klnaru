@@ -13,15 +13,17 @@ public:
 	//==================Functions==================
 	SpaceFinder();
 	void init();				//Initializes variables and robot
-	void centerObject();			//Moves the robot to center the object (calls locateObject() and moveRobot)
-	void getObjectFromUser();		//Allows user to select source frame and object (calls getROI and uses mouse_callback)
+//	void centerObject();			//Moves the robot to center the object (calls locateObject() and moveRobot)
+//	void getObjectFromUser();		//Allows user to select source frame and object (calls getROI and uses mouse_callback)
 	void setSource(IplImage*); //Sets source frame to be analyzed
 	void driveRobot(char);
 	void stopRobot();
-	void adjustDistance(char);
+//	void adjustDistance(char);
 	void viewImage();
 	void findSpace();
-	void CalculateEdgeDensity(IplImage* img, int hCells, int vCells);
+	void CalculateEdgeDensity(IplImage* img);
+	void drawCells(int x, int y, int width, int height, int value);
+	void findSafeAreaCenter();
 
 	//==================Variables==================
 	bool initialized;
@@ -39,7 +41,7 @@ private:
 	void moveRobot();														//Moves robot to center object
 	
 	//==================Variables==================
-	//IRobotCreate robot;
+	IRobotCreate robot;
 
 	double area_thresh;
 	double ERR_side;
@@ -66,8 +68,8 @@ private:
 	CvPoint min_loc;
 	CvPoint max_loc;
 	CvRect ROI;
-	CvRect safeArea;
 	CvPoint imageCenter;
+	CvRect safeArea;
 	
 	int light_pixel_threshold;
 	double percent_light_threshold;
@@ -94,5 +96,9 @@ private:
 		unsigned int height;		//unit : pixel
 		unsigned int edges;		//Number of edges
 		unsigned int colorIndex;	//color index to show the level of edges
-	};
+		bool isSafeArea;
+	}cell[10][10];
+
+	int hCells; //= 10;	// the number of horizontal cell
+	int vCells; //= 10;	// the number of vertical cell
 };
