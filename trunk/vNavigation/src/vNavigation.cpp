@@ -1,11 +1,11 @@
 /*
-* Brief : Retrieves images from wireless camera and calls functions for finding and tracking a color blob
-*					(code to retrieve images written by Soonhac Hong)
-* Usage :	$rosmake icreate
-*					$rosmake wireless_camera
-*					$roscore
+* Brief : Implement the novel algorithm for visual navigation with single camera.
+* Author : Soonhac Hong (sh2723@columbia.edu)
+* Usage : $rosmake vNavigation
+*		  $rosmake wireless_camera
+*		  $roscore
 *         $rosrun wireless_camera wireless_camera.py
-*         $rosrun icreate track
+*         $rosrun vNavigation vNavigation
 */
 
 #include <iostream>
