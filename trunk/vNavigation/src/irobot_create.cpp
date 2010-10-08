@@ -10,7 +10,8 @@ IRobotCreate::IRobotCreate()
   : x(0), y(0), th(0), bump(0), batt(0)
 {
   // see if the IROBOT_CREATE_OPPORT variable is defined
-  const char *default_port = "/dev/rfcomm0";
+    const char *default_port = "/dev/rfcomm0";		//Bluetooth
+//	const char *default_port = "/dev/ttyUSB0";
   const char *port_env = getenv("IROBOT_CREATE_PORT");
   serial_port_str = (port_env ? port_env : default_port);
   ROS_DEBUG("irobotcreate ctor, serial_port_str = [%s]", serial_port_str);
