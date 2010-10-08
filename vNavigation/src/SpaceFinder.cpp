@@ -151,16 +151,16 @@ void SpaceFinder::findSpace(){
 	cvShowImage("Image Processing", img_edge);
 }
 
-//TODO : Debug here !!!
 /**
  * Find center of the safe space
  * Assumption : The camera is attached at the center of the robot.
  */
 void SpaceFinder::findSafeAreaCenter(){
-	safeArea.x = -1;
-	safeArea.y = -1;
-	safeArea.width = -1;
-	safeArea.height = -1;
+	unsigned int safeAreaIndex = 0;		//Number of safeArea
+	(safeArea+safeAreaIndex)->x = -1;
+	(safeArea+safeAreaIndex)->y = -1;
+	(safeArea+safeAreaIndex)->width = -1;
+	(safeArea+safeAreaIndex)->height = -1;
 	CvRect additionalSafeArea;
 
 	for(int i=7; i<vCells; i++){
@@ -168,11 +168,13 @@ void SpaceFinder::findSafeAreaCenter(){
 			if(cell[i][j].isSafeArea == true){
 //				ROS_INFO_STREAM("safeArea.x = " << safeArea.x);
 //				ROS_INFO_STREAM("safeArea.y = " << safeArea.y);
-				if(safeArea.x == -1){	//First safe area
-					safeArea.x = j*screen_width/hCells;
-					safeArea.y = i*screen_height/vCells;
-					safeArea.width = screen_width/hCells;
-					safeArea.height = screen_height/vCells;
+				if(safeAreaIndex == 0){	//First safe area
+					(safeArea+safeAreaIndex)->x = j*screen_width/hCells;
+					(safeArea+safeAreaIndex)->y = i*screen_height/vCells;
+					(safeArea+safeAreaIndex)->width = screen_width/hCells;
+					(safeArea+safeAreaIndex)->height = screen_height/vCells;
+					cell[i][j].setIndex = 1;
+					safeAreaIndex =1;
 				}else{
 					additionalSafeArea.x = j*screen_width/hCells;
 					additionalSafeArea.y = i*screen_height/vCells;
@@ -181,32 +183,82 @@ void SpaceFinder::findSafeAreaCenter(){
 
 //					ROS_INFO_STREAM("additionalSafeArea.x = " << additionalSafeArea.x);
 //					ROS_INFO_STREAM("additionalSafeArea.y = " << additionalSafeArea.y);
-					//Update Safe Area
-					if(safeArea.x > additionalSafeArea.x){
-						safeArea.x = additionalSafeArea.x;
-						safeArea.width +=  additionalSafeArea.width;
-					}else if(safeArea.x < additionalSafeArea.x && safeArea.x+safeArea.width < additionalSafeArea.x + additionalSafeArea.width ){
-						safeArea.width +=  additionalSafeArea.width;
+
+					//Update Safe Area with considering the adjacency of the cells using the sets.
+					//If the new safe cell is not 4-neighbors of the cells in the previous sets, a new set will be generated.
+
+					//Check 4-neighbors
+					safeAreaIndex = generateSet(j,i,safeAreaIndex);
+
+					if((safeArea+safeAreaIndex)->x > additionalSafeArea.x){
+						(safeArea+safeAreaIndex)->x = additionalSafeArea.x;
+						(safeArea+safeAreaIndex)->width +=  additionalSafeArea.width;
+					}else if((safeArea+safeAreaIndex)->x < additionalSafeArea.x && (safeArea+safeAreaIndex)->x+(safeArea+safeAreaIndex)->width < additionalSafeArea.x + additionalSafeArea.width ){
+						(safeArea+safeAreaIndex)->width +=  additionalSafeArea.width;
 					}
-					if(safeArea.y > additionalSafeArea.y){
-						safeArea.y = additionalSafeArea.x;
-						safeArea.height +=  additionalSafeArea.height;
-					}else if(safeArea.y < additionalSafeArea.y && safeArea.y+safeArea.height < additionalSafeArea.y + additionalSafeArea.height){
-						safeArea.height +=  additionalSafeArea.height;
+					if((safeArea+safeAreaIndex)->y > additionalSafeArea.y){
+						(safeArea+safeAreaIndex)->y = additionalSafeArea.x;
+						(safeArea+safeAreaIndex)->height +=  additionalSafeArea.height;
+					}else if((safeArea+safeAreaIndex)->y < additionalSafeArea.y && (safeArea+safeAreaIndex)->y+(safeArea+safeAreaIndex)->height < additionalSafeArea.y + additionalSafeArea.height){
+						(safeArea+safeAreaIndex)->height +=  additionalSafeArea.height;
 					}
 				}
 			}
 		}
 	}
 
-	//Show the center of the safe Area
-	cvCircle(src, cvPoint(safeArea.x+safeArea.width/2,safeArea.y+safeArea.height/2), 10, cvScalar(0,0,255), 2);
+	//Show the center of the maximum safe Area
+	int maxAreaIndex = findMaxAreaIndex(safeAreaIndex);
+
+	cvCircle(src, cvPoint((safeArea+maxAreaIndex)->x+(safeArea+maxAreaIndex)->width/2,(safeArea+maxAreaIndex)->y+(safeArea+maxAreaIndex)->height/2), 10, cvScalar(0,0,255), 2);
 //	cvCircle(src, cvPoint(320,240), 10, cvScalar(0,0,255), 2);
 
-	ROS_INFO_STREAM("center.x = " << safeArea.x+safeArea.width/2);
-	ROS_INFO_STREAM("center.y = " << safeArea.y+safeArea.height/2);
+	ROS_INFO_STREAM("center.x = " << (safeArea+maxAreaIndex)->x+(safeArea+maxAreaIndex)->width/2);
+	ROS_INFO_STREAM("center.y = " << (safeArea+maxAreaIndex)->y+(safeArea+maxAreaIndex)->height/2);
 
 }
+
+/**
+ * Find the index of maximum area.
+ */
+int SpaceFinder::findMaxAreaIndex(int setIndex){
+	int areaSize[setIndex];
+	int maxIndex = 0;
+	int maxSize = 0;
+
+	for(int i=0; i<vCells; i++){
+		for(int j=0; j<hCells; j++){
+			areaSize[cell[i][j].setIndex]++;
+			if(areaSize[cell[i][j].setIndex] > maxSize){
+				maxSize = areaSize[cell[i][j].setIndex];
+				maxIndex = cell[i][j].setIndex;
+			}
+		}
+	}
+
+	return maxIndex;
+}
+
+/**
+ * Generate the a new set or assign the cell into the previous set.
+ * @param x the x-axis index of the cell
+ * @param y the y-axis index of the cell
+ */
+int SpaceFinder::generateSet(int x, int y, int setIndex){
+
+	for(int i=0; i<vCells; i++){
+		for(int j=0; j<hCells; j++){
+			if(((x==j+1 || x==j-1) && y==i)||((y==i+1 || y==i-1) && x==j)){		//Check 4-neighbors(left,right,up and down)
+				if(cell[i][j].isSafeArea == true && cell[i][j].setIndex >= 1){
+					return cell[i][j].setIndex;
+				}
+			}
+		}
+	}
+
+	return setIndex++;
+}
+
 /**
  * Calculate the number of edges of each cell. It will show the number of edges with color scale.
  * @param img edge image composed of pixels which has 0(white) or 255(black)
@@ -262,7 +314,7 @@ void SpaceFinder::CalculateEdgeDensity(IplImage* img){
 	}
 	int average = sum/(hCells*vCells);
 
-	//Show color level of cells
+	//Determin the safe area and show color level of cells
 	for(int i=0; i<vCells; i++){
 		for(int j=0; j<hCells; j++){
 			if(cell[i][j].edges > average/2){

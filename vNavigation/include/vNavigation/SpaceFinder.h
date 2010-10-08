@@ -24,6 +24,8 @@ public:
 	void CalculateEdgeDensity(IplImage* img);
 	void drawCells(int x, int y, int width, int height, int value);
 	void findSafeAreaCenter();
+	int findMaxAreaIndex(int setIndex);
+	int generateSet(int x, int y, int setIndex);
 
 	//==================Variables==================
 	bool initialized;
@@ -69,7 +71,7 @@ private:
 	CvPoint max_loc;
 	CvRect ROI;
 	CvPoint imageCenter;
-	CvRect safeArea;
+	CvRect *safeArea;
 	
 	int light_pixel_threshold;
 	double percent_light_threshold;
@@ -96,6 +98,7 @@ private:
 		unsigned int height;		//unit : pixel
 		unsigned int edges;		//Number of edges
 		unsigned int colorIndex;	//color index to show the level of edges
+		unsigned int setIndex; 		// the sequence number of set which indicates the safe area
 		bool isSafeArea;
 	}cell[10][10];
 
