@@ -1,12 +1,12 @@
 /*
 * Author: Soonhac Hong
 * Updated: 07/15/2010
-* Brief : This provides functions for finding and tracking a color blob
-* Usage :	$rosmake icreate
-*					$rosmake wireless_camera
-*					$roscore
-*         $rosrun wireless_camera wireless_camera.py
-*         $rosrun icreate track
+* Brief : This provides functions for visual Navigation
+* Usage :$rosmake icreate
+*		 $rosmake wireless_camera
+*		 $roscore
+*        $rosrun wireless_camera wireless_camera.py
+*        $rosrun icreate track
 */
 
 #include <iostream>
